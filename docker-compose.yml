@@ -1,0 +1,35 @@
+version: '3.9'
+
+services:
+  cctrack:
+    build:
+      context: .
+      args:
+        JWT_SECRET: ${JWT_SECRET}
+        PLAID_CLIENT_ID: ${PLAID_CLIENT_ID}
+        PLAID_SECRET: ${PLAID_SECRET}
+        DB_HOST: cctrack_db
+        DB_PORT: 5432
+        DB_USER: ${DB_USER}
+        DB_PASS: ${DB_PASS}
+        DB_NAME: ${DB_NAME}
+    container_name: cctrack
+    environment:
+      ORIGIN: ${ORIGIN}
+      TZ: 'America/New_York'
+    ports:
+      - '3000:3000'
+    depends_on:
+      - cctrack_db
+    restart: unless-stopped
+
+  cctrack_db:
+    image: postgres:16
+    container_name: cctrack_db
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./db:/var/lib/postgresql/data
+    restart: unless-stopped
