@@ -64,10 +64,15 @@ export const actions = {
             return fail(400, { form })
         }
 
+        if (form.data.password !== form.data.confirm_password) {
+            form.errors.confirm_password = ['Passwords do not match.'];
+            return fail(400, { form })
+        }
+
         const user = await db.select('id', 'email', 'password', 'name').from('users').where('email', form.data.email).first();
-        form.errors.email = ['Email already in use.'];
 
         if (user) {
+            form.errors.email = ['Email already in use.'];
             return fail(400, { form })
         }
 
