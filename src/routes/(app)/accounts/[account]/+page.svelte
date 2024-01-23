@@ -109,7 +109,7 @@
 						}))
 						.concat(
 							data.categories.map((category) => ({
-								label: formatCategory(category.DETAILED.replace(category.PRIMARY + '_', '')),
+								label: formatCategory(category.PRIMARY) + ": " + formatCategory(category.DETAILED.replace(category.PRIMARY + '_', '')),
 								value: category.DETAILED
 							}))
 						)}
