@@ -73,7 +73,7 @@
 							<Card.Title>{account.name}</Card.Title>
 							<h2 class="text-neutral-400">{account.mask}</h2>
 						</div>
-						<Card.Description>{account.type} / {account.subtype}</Card.Description>
+						<Card.Description>{account.institution} / {account.type} / {account.subtype}</Card.Description>
 					</Card.Header>
 					<Card.Content class="flex flex-col gap-2">
 						{#if account.balance_current}
