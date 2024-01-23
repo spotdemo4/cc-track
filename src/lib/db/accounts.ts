@@ -11,7 +11,9 @@ export async function getBalance(user_id: number) {
 
     let balance = 0;
     for (let account of accounts_db) {
-        balance += parseInt(account.balance_available);
+        if (account.balance_available) {
+            balance += parseInt(account.balance_available);
+        }
     }
 
     return balance;
@@ -26,7 +28,9 @@ export async function getDebt(user_id: number) {
 
     let debt = 0;
     for (let account of accounts_db) {
-        debt += parseInt(account.balance_current);
+        if (account.balance_current) {
+            debt += parseInt(account.balance_current);
+        }
     }
 
     return debt * -1;
