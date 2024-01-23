@@ -44,7 +44,7 @@ export async function getCategories(user_id: number, start: Date, end: Date) {
         return {
             name: formatCategory(category.category_primary),
             real_name: category.category_primary,
-            amount: parseInt(category.amount) * -1
+            amount: Number(category.amount) * -1
         }
     });
 
@@ -108,7 +108,7 @@ export async function getTransactions(user_id: number, start: Date, end: Date, m
             category_detailed: formatCategory(transaction.category_detailed.replace(transaction.category_primary + '_', '')),
             category_confidence: transaction.category_confidence,
             category_icon: transaction.category_icon,
-            amount: parseInt(transaction.amount) * -1,
+            amount: Number(transaction.amount) * -1,
             date: transaction.date,
             authorized_date: transaction.authorized_date,
             created_at: transaction.created_at,

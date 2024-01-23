@@ -12,7 +12,7 @@ export async function getBalance(user_id: number) {
     let balance = 0;
     for (let account of accounts_db) {
         if (account.balance_available) {
-            balance += parseInt(account.balance_available);
+            balance += Number(account.balance_available);
         }
     }
 
@@ -29,7 +29,7 @@ export async function getDebt(user_id: number) {
     let debt = 0;
     for (let account of accounts_db) {
         if (account.balance_current) {
-            debt += parseInt(account.balance_current);
+            debt += Number(account.balance_current);
         }
     }
 
@@ -70,9 +70,9 @@ export async function getAccount(account_id: string) {
         type: account_db.type,
         subtype: account_db.subtype,
         institution: account_db.institution,
-        balance_available: account_db.balance_available ? parseInt(account_db.balance_available) : undefined,
-        balance_current: account_db.balance_current ? parseInt(account_db.balance_current) : undefined,
-        balance_limit: account_db.balance_limit ? parseInt(account_db.balance_limit) : undefined,
+        balance_available: account_db.balance_available ? Number(account_db.balance_available) : undefined,
+        balance_current: account_db.balance_current ? Number(account_db.balance_current) : undefined,
+        balance_limit: account_db.balance_limit ? Number(account_db.balance_limit) : undefined,
         balance_currency_code: account_db.balance_currency_code,
         created_at: account_db.created_at,
     };
@@ -108,9 +108,9 @@ export async function getAccounts(user_id: number) {
             type: account.type,
             subtype: account.subtype,
             institution: account.institution,
-            balance_available: account.balance_available ? parseInt(account.balance_available) : undefined,
-            balance_current: account.balance_current ? parseInt(account.balance_current) : undefined,
-            balance_limit: account.balance_limit ? parseInt(account.balance_limit) : undefined,
+            balance_available: account.balance_available ? Number(account.balance_available) : undefined,
+            balance_current: account.balance_current ? Number(account.balance_current) : undefined,
+            balance_limit: account.balance_limit ? Number(account.balance_limit) : undefined,
             balance_currency_code: account.balance_currency_code,
             created_at: account.created_at,
         }
