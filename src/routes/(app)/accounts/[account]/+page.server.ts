@@ -11,7 +11,7 @@ const schema = z.object({
     id: z.string(),
     name: z.string().min(1),
     mask: z.string().optional(),
-    official_name: z.string().optional(),
+    official_name: z.string().nullish(),
     type: z.string().min(1),
     subtype: z.string().min(1),
     institution: z.string().min(1),
