@@ -4,7 +4,7 @@
 	import { Toaster } from '$lib/components/ui/sonner';
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { LayoutData } from './$types';
@@ -20,6 +20,7 @@
 				'Content-Type': 'application/json'
 			}
 		});
+		await invalidateAll();
 		const data = await res.json();
 		if (data.sync_account_success && data.sync_transaction_success) {
 			toast.success('Synced accounts & transactions!', {

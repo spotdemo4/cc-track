@@ -14,6 +14,7 @@
 
 	const dispatch = createEventDispatcher();
 	let open = false;
+	let init_values = values;
 
 	const handleSelect = (currentValue: string) => {
 		if (Array.isArray(values) && values.includes(currentValue)) {
@@ -23,8 +24,9 @@
 		}
 	};
 
-	$: if (values) {
+	$: if (values && values !== init_values) {
 		dispatch('change', values);
+		init_values = values;
 	}
 </script>
 
@@ -65,6 +67,7 @@
 				<Command.Group>
 					{#each options as option}
 						<Command.Item
+							class="cursor-pointer"
 							value={option.value}
 							onSelect={(selectValue) => {
 								handleSelect(selectValue);
@@ -89,7 +92,7 @@
 				{#if values.length > 0}
 					<Command.Separator />
 					<Command.Item
-						class="justify-center text-center"
+						class="justify-center text-center cursor-pointer"
 						onSelect={() => {
 							values = [];
 						}}

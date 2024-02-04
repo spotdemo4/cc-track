@@ -5,7 +5,7 @@ import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ locals }) => {
 	if (!locals.user) {
-		return json({ sync_transaction_success: false, sync_account_success: false});
+		return json({ sync_transaction_success: false, sync_account_success: false });
 	}
 
 	let sync_account_success = await syncAccounts(locals.user.id);

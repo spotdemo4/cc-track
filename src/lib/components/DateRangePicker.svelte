@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { Calendar as CalendarIcon } from 'lucide-svelte';
 	import type { DateRange } from 'bits-ui';
-	import { DateFormatter, getLocalTimeZone } from '@internationalized/date';
+	import { DateFormatter, getLocalTimeZone, today } from '@internationalized/date';
 	import { cn } from '$lib/utils';
 	import { Button } from '$lib/components/ui/button';
 	import { RangeCalendar } from '$lib/components/ui/range-calendar';
 	import * as Popover from '$lib/components/ui/popover';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -14,13 +14,33 @@
 		dateStyle: 'medium'
 	});
 
-	export let value: DateRange = { start: undefined, end: undefined };
+	export let value: DateRange = {
+		start: undefined,
+		end: undefined
+	};
+	export let start = value.start ? value.start.toDate(getLocalTimeZone()) : undefined;
+	export let end = value.end ? value.end.toDate(getLocalTimeZone()) : undefined;
 	let init_value = value;
 
-	$: if (value?.end && value != init_value) {
-		dispatch('change', value);
+	// onChange
+	$: if (value?.start && value?.end && value != init_value) {
+		start = value.start.toDate(getLocalTimeZone());
+		end = value.end.toDate(getLocalTimeZone());
+
+		dispatch('change', {
+			start,
+			end
+		});
+
 		init_value = value;
 	}
+
+	onMount(() => {
+		if (value.start && value.end) {
+			start = value.start.toDate(getLocalTimeZone());
+			end = value.end.toDate(getLocalTimeZone());
+		}
+	});
 </script>
 
 <div class="grid gap-2">

@@ -1,7 +1,8 @@
 import { redirect } from '@sveltejs/kit';
 import { building } from '$app/environment';
-import { db } from '$lib/db';
 import { JWT_SECRET } from '$env/static/private';
+import { db } from '$lib/db';
+import { sql } from 'kysely';
 import jsonwebtoken from 'jsonwebtoken';
 import type { Handle } from '@sveltejs/kit';
 
@@ -39,67 +40,66 @@ if (!building) {
     let connected = false;
     while (!connected) {
         try {
-            if (!await db.schema.hasTable('users')) {
-                await db.schema.createTable('users', (table) => {
-                    table.increments('id');
-                    table.string('email').notNullable().unique();
-                    table.string('password').notNullable();
-                    table.string('name').notNullable();
-                    table.timestamp('created_at').defaultTo(db.fn.now());
-                });
+            const tables = await db.introspection.getTables();
+
+            if (!tables.find((table) => table.name == 'users')) {
+                await db.schema.createTable('users')
+                    .addColumn('id', 'serial', col => col.primaryKey())
+                    .addColumn('email', 'text', col => col.unique().notNull())
+                    .addColumn('password', 'text', col => col.notNull())
+                    .addColumn('name', 'text', col => col.notNull())
+                    .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
+                    .execute();
             }
 
-            if (!await db.schema.hasTable('accounts')) {
-                await db.schema.createTable('accounts', (table) => {
-                    table.string('id').notNullable().unique().primary();
-                    table.string('name').notNullable();
-                    table.string('mask');
-                    table.string('official_name')
-                    table.string('type').notNullable();
-                    table.string('subtype');
-                    table.string('institution').notNullable();
-                    table.string('access_token').notNullable();
-                    table.string('cursor');
-                    table.decimal('balance_available', 14, 2);
-                    table.decimal('balance_current', 14, 2);
-                    table.decimal('balance_limit', 14, 2);
-                    table.string('balance_currency_code');
-                    table.integer('user_id').unsigned().notNullable();
-                    table.foreign('user_id').references('users.id');
-                    table.timestamp('created_at').defaultTo(db.fn.now());
-                });
+            if (!tables.find((table) => table.name == 'accounts')) {
+                await db.schema.createTable('accounts')
+                    .addColumn('id', 'text', col => col.primaryKey())
+                    .addColumn('name', 'text', col => col.notNull())
+                    .addColumn('mask', 'text')
+                    .addColumn('official_name', 'text')
+                    .addColumn('type', 'text', col => col.notNull())
+                    .addColumn('subtype', 'text')
+                    .addColumn('institution', 'text', col => col.notNull())
+                    .addColumn('access_token', 'text', col => col.notNull())
+                    .addColumn('cursor', 'text')
+                    .addColumn('balance_available', 'numeric(14, 2)')
+                    .addColumn('balance_current', 'numeric(14, 2)')
+                    .addColumn('balance_limit', 'numeric(14, 2)')
+                    .addColumn('balance_currency_code', 'text')
+                    .addColumn('user_id', 'integer', col => col.notNull().references('users.id').onDelete('cascade'))
+                    .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
+                    .execute();
             }
 
-            if (!await db.schema.hasTable('transactions')) {
-                await db.schema.createTable('transactions', (table) => {
-                    table.string('id').notNullable().unique().primary();
-                    table.string('account_id').notNullable();
-                    table.foreign('account_id').references('accounts.id');
-                    table.string('name').notNullable();
-                    table.string('merchant_name');
-                    table.string('currency_code');
-                    table.string('category_primary');
-                    table.string('category_detailed');
-                    table.string('category_confidence');
-                    table.string('category_icon');
-                    table.decimal('amount', 14, 2).notNullable();
-                    table.timestamp('date').notNullable();
-                    table.timestamp('authorized_date');
-                    table.timestamp('created_at').defaultTo(db.fn.now());
-                });
+            if (!tables.find((table) => table.name == 'transactions')) {
+                await db.schema.createTable('transactions')
+                    .addColumn('id', 'text', col => col.primaryKey())
+                    .addColumn('account_id', 'text', col => col.notNull().references('accounts.id').onDelete('cascade'))
+                    .addColumn('name', 'text', col => col.notNull())
+                    .addColumn('merchant_name', 'text')
+                    .addColumn('currency_code', 'text')
+                    .addColumn('category_primary', 'text')
+                    .addColumn('category_detailed', 'text')
+                    .addColumn('category_confidence', 'text')
+                    .addColumn('category_icon', 'text')
+                    .addColumn('amount', 'numeric(14, 2)', col => col.notNull())
+                    .addColumn('date', 'timestamp', col => col.notNull())
+                    .addColumn('authorized_date', 'timestamp')
+                    .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
+                    .execute();
             }
 
-            if (!await db.schema.hasTable('cash_back')) {
-                await db.schema.createTable('cash_back', (table) => {
-                    table.increments('id');
-                    table.string('account_id').notNullable();
-                    table.foreign('account_id').references('accounts.id');
-                    table.string('category').notNullable();
-                    table.decimal('percentage', 14, 2).notNullable();
-                    table.timestamp('start');
-                    table.timestamp('end');
-                    table.timestamp('created_at').defaultTo(db.fn.now());
-                });
+            if (!tables.find((table) => table.name == 'cash_back')) {
+                await db.schema.createTable('cash_back')
+                    .addColumn('id', 'serial', col => col.primaryKey())
+                    .addColumn('account_id', 'text', col => col.notNull().references('accounts.id').onDelete('cascade'))
+                    .addColumn('category', 'text', col => col.notNull())
+                    .addColumn('percentage', 'numeric(14, 2)', col => col.notNull())
+                    .addColumn('start', 'timestamp')
+                    .addColumn('end', 'timestamp')
+                    .addColumn('created_at', 'timestamp', col => col.defaultTo(sql`NOW()`))
+                    .execute();
             }
 
             connected = true;

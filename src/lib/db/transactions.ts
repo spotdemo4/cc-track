@@ -1,61 +1,129 @@
 import { db } from '$lib/db';
+import { sql } from 'kysely';
 import { plaidClient } from '$lib/plaid';
-import { getCashBack } from '$lib/db/cash_back';
-import type { Transaction } from '$lib/types';
-import type { CashBack } from '$lib/types';
-
-function formatCategory(category: string) {
-    return category.split('_').map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-}
+import { getAccounts } from '$lib/db/accounts';
+import { jsonObjectFrom } from 'kysely/helpers/postgres';
 
 export async function getRevenue(user_id: number, start: Date, end: Date) {
-    let accounts = await db.select('id').from('accounts').where('user_id', user_id);
-    accounts = accounts.map((account) => account.id);
-    let transactions: any = await db.select(db.raw('SUM(amount) as revenue')).from('transactions').whereIn('account_id', accounts).andWhere('amount', '<', 0).andWhereBetween('date', [start, end]).first();
-    return transactions.revenue * -1;
+    const account_ids = (await getAccounts(user_id)).map((account) => account.id);
+    if (account_ids.length === 0) {
+        return [];
+    }
+
+    return await db.selectFrom('transactions')
+        .select(({ fn }) => [
+            sql<Date>`DATE_TRUNC('month', date)`.as('month'),
+            fn.sum('amount').as('amount')
+        ])
+        .where('account_id', 'in', account_ids)
+        .where('amount', '<', '0')
+        .where('date', '>=', start)
+        .where('date', '<=', end)
+        .groupBy(sql`DATE_TRUNC('month', date)`)
+        .orderBy('month', 'asc')
+        .execute();
 }
 
 export async function getExpenses(user_id: number, start: Date, end: Date) {
-    let accounts = await db.select('id').from('accounts').where('user_id', user_id);
-    accounts = accounts.map((account) => account.id);
-    let transactions: any = await db.select(db.raw('SUM(amount) as expenses')).from('transactions').whereIn('account_id', accounts).andWhere('amount', '>', 0).andWhereBetween('date', [start, end]).first();
-    return transactions.expenses * -1;
+    const account_ids = (await getAccounts(user_id)).map((account) => account.id);
+    if (account_ids.length === 0) {
+        return [];
+    }
+
+    return await db.selectFrom('transactions')
+        .select(({ fn }) => [
+            sql<Date>`DATE_TRUNC('month', date)`.as('month'),
+            fn.sum('amount').as('amount')
+        ])
+        .where('account_id', 'in', account_ids)
+        .where('amount', '>', '0')
+        .where('date', '>=', start)
+        .where('date', '<=', end)
+        .groupBy(sql`DATE_TRUNC('month', date)`)
+        .orderBy('month', 'asc')
+        .execute();
 }
 
 export async function getProfit(user_id: number, start: Date, end: Date) {
-    let accounts = await db.select('id').from('accounts').where('user_id', user_id);
-    accounts = accounts.map((account) => account.id);
-    let transactions: any = await db.select(db.raw('SUM(amount) as profit')).from('transactions').whereIn('account_id', accounts).andWhereBetween('date', [start, end]).first();
-    return transactions.profit * -1;
+    const account_ids = (await getAccounts(user_id)).map((account) => account.id);
+    if (account_ids.length === 0) {
+        return [];
+    }
+
+    return await db.selectFrom('transactions')
+        .select(({ fn }) => [
+            sql<Date>`DATE_TRUNC('month', date)`.as('month'),
+            fn.sum('amount').as('amount')
+        ])
+        .where('account_id', 'in', account_ids)
+        .where('date', '>=', start)
+        .where('date', '<=', end)
+        .groupBy(sql`DATE_TRUNC('month', date)`)
+        .orderBy('month', 'asc')
+        .execute();
 }
+
 
 export async function getCategories(user_id: number, start: Date, end: Date) {
-    let accounts = await db.select('id').from('accounts').where('user_id', user_id);
-    accounts = accounts.map((account) => account.id);
-    let categories_db = await db
-        .select('category_primary', db.raw('SUM(amount) as amount'))
-        .from('transactions')
-        .whereIn('account_id', accounts)
-        .andWhereBetween('date', [start, end])
+    const account_ids = (await getAccounts(user_id)).map((account) => account.id);
+    if (account_ids.length === 0) {
+        return [];
+    }
+
+    return await db.selectFrom('transactions')
+        .select(({ fn }) => [
+            'category_primary',
+            fn.sum<number>('amount').as('amount')
+        ])
+        .where('account_id', 'in', account_ids)
+        .where('amount', '>', '0')
+        .where('date', '>=', start)
+        .where('date', '<=', end)
         .groupBy('category_primary')
-        .orderBy('amount', 'desc');
-
-    let categories: { name: string, real_name: string, amount: number }[] = categories_db.map((category) => {
-        return {
-            name: formatCategory(category.category_primary),
-            real_name: category.category_primary,
-            amount: Number(category.amount) * -1
-        }
-    });
-
-    return categories;
+        .orderBy('amount', 'desc')
+        .execute();
 }
 
-export async function getTransactions(user_id: number, start: Date, end: Date, merchants_filter: string = '', accounts_filter: string[] = [], categories_filter: string[] = [], page_size: number = 10, page_current: number = 1) {
-    let accounts = await db.select('id').from('accounts').where('user_id', user_id);
-    accounts = accounts.map((account) => account.id);
-    let transactions_query = db
-        .select(
+export async function getSubcategories(user_id: number, start: Date, end: Date) {
+    const account_ids = (await getAccounts(user_id)).map((account) => account.id);
+    if (account_ids.length === 0) {
+        return [];
+    }
+
+    return await db.selectFrom('transactions')
+        .select(({ fn }) => [
+            'category_detailed',
+            'category_primary',
+            fn.sum<number>('amount').as('amount')
+        ])
+        .where('account_id', 'in', account_ids)
+        .where('amount', '>', '0')
+        .where('date', '>=', start)
+        .where('date', '<=', end)
+        .groupBy('category_detailed')
+        .groupBy('category_primary')
+        .orderBy('amount', 'desc')
+        .execute();
+}
+
+export async function getTransactions(
+    user_id: number,
+    start: Date,
+    end: Date,
+    merchants_filter: string = '',
+    accounts_filter: string[] = [],
+    categories_filter: string[] = [],
+    page_size: number = 10,
+    page_current: number = 1
+) {
+    const account_ids = (await getAccounts(user_id)).map((account) => account.id);
+    if (account_ids.length === 0) {
+        return [];
+    }
+
+    let query = db.selectFrom('transactions')
+        .innerJoin('accounts', 'transactions.account_id', 'accounts.id')
+        .select((eb) => [
             'transactions.id',
             'transactions.account_id',
             'transactions.name',
@@ -70,89 +138,88 @@ export async function getTransactions(user_id: number, start: Date, end: Date, m
             'transactions.authorized_date',
             'transactions.created_at',
             'accounts.name as account_name',
-        )
-        .from('transactions')
-        .leftJoin('accounts', (e) => {
-            e.on('accounts.id', '=', 'transactions.account_id')
-        })
+            jsonObjectFrom(
+                eb.selectFrom('cash_back')
+                    .selectAll()
+                    .whereRef('cash_back.account_id', '=', 'transactions.account_id')
+                    .where((eb) => eb.or([
+                        eb('cash_back.start', '<=', eb.ref('transactions.date')),
+                        eb('cash_back.start', 'is', null)
+                    ]))
+                    .where((eb) => eb.or([
+                        eb('cash_back.end', '>=', eb.ref('transactions.date')),
+                        eb('cash_back.end', 'is', null)
+                    ]))
+                    .where((eb) => eb.or([
+                        eb('cash_back.category', '=', eb.ref('transactions.category_primary')),
+                        eb('cash_back.category', '=', eb.ref('transactions.category_detailed'))
+                    ]))
+            ).as('cash_back')
+        ])
         .limit(page_size)
         .offset((page_current - 1) * page_size)
-        .orderBy('date', 'desc')
-        .whereIn('account_id', accounts)
-        .andWhereBetween('date', [start, end]);
+        .orderBy('transactions.date', 'desc')
+        .where('transactions.account_id', 'in', account_ids)
+        .where('transactions.date', '>=', start)
+        .where('transactions.date', '<=', end);
 
     if (merchants_filter) {
-        transactions_query = transactions_query.andWhereLike('transactions.merchant_name', '%' + merchants_filter + '%');
+        query = query.where(({ fn }) => fn('lower', ['transactions.merchant_name']), 'like', '%' + merchants_filter.toLowerCase() + '%');
     }
 
     if (accounts_filter.length > 0) {
-        transactions_query = transactions_query.whereIn('account_id', accounts_filter);
+        query = query.where('transactions.account_id', 'in', accounts_filter);
     }
 
     if (categories_filter.length > 0) {
-        transactions_query = transactions_query.whereIn('category_primary', categories_filter);
+        query = query.where('transactions.category_primary', 'in', categories_filter);
     }
 
-    let transactions_db = await transactions_query;
-
-    let transactions: Transaction[] = await Promise.all(transactions_db.map(async (transaction) => {
-        const cash_back: CashBack | undefined = await getCashBack(transaction.account_id, transaction.category_primary, transaction.category_detailed, transaction.date);
-        return {
-            id: transaction.id,
-            account_name: transaction.account_name,
-            account_id: transaction.account_id,
-            name: transaction.name,
-            merchant_name: transaction.merchant_name,
-            currency_code: transaction.currency_code,
-            category_primary: formatCategory(transaction.category_primary),
-            category_detailed: formatCategory(transaction.category_detailed.replace(transaction.category_primary + '_', '')),
-            category_confidence: transaction.category_confidence,
-            category_icon: transaction.category_icon,
-            amount: Number(transaction.amount) * -1,
-            date: transaction.date,
-            authorized_date: transaction.authorized_date,
-            created_at: transaction.created_at,
-            cash_back: cash_back,
-        }
-    }));
-
-    return transactions;
+    return await query.execute();
 }
 
 export async function getTransactionsCount(user_id: number, start: Date, end: Date, merchants_filter: string = '', accounts_filter: string[] = [], categories_filter: string[] = []) {
-    let accounts = await db.select('id').from('accounts').where('user_id', user_id);
-    accounts = accounts.map((account) => account.id);
-    let transactions_query = db
-        .count('* as count')
-        .from('transactions')
-        .leftJoin('accounts', (e) => {
-            e.on('accounts.id', '=', 'transactions.account_id')
-        })
-        .whereIn('account_id', accounts)
-        .andWhereBetween('date', [start, end]);
+    const account_ids = (await getAccounts(user_id)).map((account) => account.id);
+    if (account_ids.length === 0) {
+        return 1;
+    }
+
+    let query = db.selectFrom('transactions')
+        .select((eb) => eb.fn.count<number>('transactions.id').as('count'))
+        .where('transactions.account_id', 'in', account_ids)
+        .where('transactions.date', '>=', start)
+        .where('transactions.date', '<=', end);
 
     if (merchants_filter) {
-        transactions_query = transactions_query.andWhereLike('transactions.merchant_name', '%' + merchants_filter + '%');
+        query = query.where(({ fn }) => fn('lower', ['transactions.merchant_name']), 'like', '%' + merchants_filter.toLowerCase() + '%');
     }
 
     if (accounts_filter.length > 0) {
-        transactions_query = transactions_query.whereIn('account_id', accounts_filter);
+        query = query.where('transactions.account_id', 'in', accounts_filter);
     }
 
     if (categories_filter.length > 0) {
-        transactions_query = transactions_query.whereIn('category_primary', categories_filter);
+        query = query.where('transactions.category_primary', 'in', categories_filter);
     }
 
-    let transactions_db = await transactions_query.first();
+    let count = await query.executeTakeFirst();
 
-    return typeof transactions_db?.count == 'string' ? parseInt(transactions_db.count) : transactions_db?.count ?? 0;
+    if (count) {
+        return count.count;
+    } else {
+        return 1;
+    }
 }
 
 export async function syncTransactions(user_id: number) {
     console.log("Syncing transactions for user " + user_id);
-    let tokens: { access_token: string, cursor: string }[] = await db.select('access_token', 'cursor').from('accounts').where('user_id', user_id).distinct('access_token');
+    let tokens = await db.selectFrom('accounts')
+        .select(['access_token', 'cursor'])
+        .where('user_id', '=', user_id)
+        .distinct()
+        .execute();
 
-    for (let token of tokens) {
+    for (const token of tokens) {
         let hasMore = true;
         let cursor = token.cursor;
 
@@ -161,7 +228,7 @@ export async function syncTransactions(user_id: number) {
             try {
                 response = await plaidClient.transactionsSync({
                     access_token: token.access_token,
-                    cursor: cursor,
+                    cursor: cursor ?? undefined,
                 });
             } catch (err: any) {
                 if (err.response.data.error_code === 'TRANSACTIONS_SYNC_LIMIT') {
@@ -173,50 +240,63 @@ export async function syncTransactions(user_id: number) {
             }
 
             for (let transaction of response.data.added) {
-                if (!await db.select('id').from('accounts').where('id', transaction.account_id).first()) {
+                if (!await db.selectFrom('accounts').select('id').where('id', '=', transaction.account_id).executeTakeFirst()) {
                     continue;
                 }
 
-                await db('transactions').insert({
-                    id: transaction.transaction_id,
-                    account_id: transaction.account_id,
-                    name: transaction.name,
-                    merchant_name: transaction.merchant_name,
-                    currency_code: transaction.iso_currency_code ?? transaction.unofficial_currency_code,
-                    category_primary: transaction.personal_finance_category?.primary,
-                    category_detailed: transaction.personal_finance_category?.detailed,
-                    category_confidence: transaction.personal_finance_category?.confidence_level,
-                    category_icon: transaction.personal_finance_category_icon_url,
-                    amount: transaction.amount,
-                    date: transaction.datetime ?? transaction.date,
-                    authorized_date: transaction.authorized_datetime ?? transaction.authorized_date,
-                });
+                await db.insertInto('transactions')
+                    .values({
+                        id: transaction.transaction_id,
+                        account_id: transaction.account_id,
+                        name: transaction.name,
+                        merchant_name: transaction.merchant_name,
+                        currency_code: transaction.iso_currency_code ?? transaction.unofficial_currency_code,
+                        category_primary: transaction.personal_finance_category?.primary,
+                        category_detailed: transaction.personal_finance_category?.detailed,
+                        category_confidence: transaction.personal_finance_category?.confidence_level,
+                        category_icon: transaction.personal_finance_category_icon_url,
+                        amount: transaction.amount,
+                        date: transaction.datetime ?? transaction.date,
+                        authorized_date: transaction.authorized_datetime ?? transaction.authorized_date,
+                    }).execute();
             }
 
             for (let transaction of response.data.modified) {
-                await db('transactions').update({
-                    name: transaction.name,
-                    merchant_name: transaction.merchant_name,
-                    currency_code: transaction.iso_currency_code ?? transaction.unofficial_currency_code,
-                    category_primary: transaction.personal_finance_category?.primary,
-                    category_detailed: transaction.personal_finance_category?.detailed,
-                    category_confidence: transaction.personal_finance_category?.confidence_level,
-                    category_icon: transaction.personal_finance_category_icon_url,
-                    amount: transaction.amount,
-                    date: transaction.datetime ?? transaction.date,
-                    authorized_date: transaction.authorized_datetime ?? transaction.authorized_date,
-                }).where('id', transaction.transaction_id);
+                await db.updateTable('transactions')
+                    .set({
+                        name: transaction.name,
+                        merchant_name: transaction.merchant_name,
+                        currency_code: transaction.iso_currency_code ?? transaction.unofficial_currency_code,
+                        category_primary: transaction.personal_finance_category?.primary,
+                        category_detailed: transaction.personal_finance_category?.detailed,
+                        category_confidence: transaction.personal_finance_category?.confidence_level,
+                        category_icon: transaction.personal_finance_category_icon_url,
+                        amount: transaction.amount,
+                        date: transaction.datetime ?? transaction.date,
+                        authorized_date: transaction.authorized_datetime ?? transaction.authorized_date,
+                    })
+                    .where('id', '=', transaction.transaction_id)
+                    .execute();
             }
 
             for (let transaction of response.data.removed) {
-                await db('transactions').delete().where('id', transaction.transaction_id);
+                if (transaction.transaction_id === undefined) {
+                    continue;
+                }
+
+                await db.deleteFrom('transactions')
+                    .where('id', '=', transaction.transaction_id)
+                    .execute();
             }
 
             hasMore = response.data.has_more;
             cursor = response.data.next_cursor;
         }
 
-        await db('accounts').update({ cursor }).where('access_token', token.access_token);
+        await db.updateTable('accounts')
+            .set({ cursor: cursor })
+            .where('access_token', '=', token.access_token)
+            .execute();
     }
 
     return true;

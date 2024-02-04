@@ -7,8 +7,8 @@
 
 	export let data: PageData;
 
-	function formatCurrency(num: number) {
-		return num.toLocaleString('en-US', {
+	function formatCurrency(num: number | string) {
+		return Number(num).toLocaleString('en-US', {
 			style: 'currency',
 			currency: 'USD'
 		});

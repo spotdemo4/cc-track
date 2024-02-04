@@ -8,7 +8,12 @@
 
 <DropdownMenu.Root>
 	<DropdownMenu.Trigger asChild let:builder>
-		<Button variant="outline" size="sm" class="ml-auto flex h-8" builders={[builder]}>
+		<Button
+			variant="outline"
+			size="sm"
+			class="ml-auto flex h-8"
+			builders={[builder]}
+		>
 			<Settings2 class="mr-2 h-4 w-4" />
 			View
 		</Button>

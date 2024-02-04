@@ -18,8 +18,8 @@ const schema = z.object({
     cash_back: z.object({
         category: z.string().min(1),
         percentage: z.coerce.number().min(0).max(100),
-        start: z.date().optional(),
-        end: z.date().optional(),
+        start: z.date().nullish(),
+        end: z.date().nullish(),
     }).array().default([]),
 });
 
@@ -31,21 +31,23 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     const form = await superValidate(schema);
     const account = await getAccount(params.account);
 
-    form.data.id = account.id;
-    form.data.name = account.name;
-    form.data.mask = account.mask;
-    form.data.official_name = account.official_name;
-    form.data.type = account.type;
-    form.data.subtype = account.subtype;
-    form.data.institution = account.institution;
-    form.data.cash_back = (await getCashBacks(account.id)).map((cash_back) => {
-        return {
-            category: cash_back.category,
-            percentage: cash_back.percentage,
-            start: cash_back.start,
-            end: cash_back.end,
-        }
-    });
+    if (account) {
+        form.data.id = account.id;
+        form.data.name = account.name;
+        form.data.mask = account.mask ?? '';
+        form.data.official_name = account.official_name;
+        form.data.type = account.type;
+        form.data.subtype = account.subtype ?? '';
+        form.data.institution = account.institution;
+        form.data.cash_back = (await getCashBacks(account.id)).map((cash_back) => {
+            return {
+                category: cash_back.category,
+                percentage: Number(cash_back.percentage),
+                start: cash_back.start,
+                end: cash_back.end,
+            }
+        });
+    }
 
     return {
         form,
@@ -71,23 +73,24 @@ export const actions = {
             return fail(400, { form })
         }
 
-        await db('cash_back')
-            .delete()
-            .where('account_id', form.data.id);
+        await db.deleteFrom('cash_back')
+            .where('account_id', '=', form.data.id)
+            .execute();
 
         for (let cash_back of form.data.cash_back) {
-            await db('cash_back')
-                .insert({
+            await db.insertInto('cash_back')
+                .values({
                     account_id: form.data.id,
                     category: cash_back.category,
                     percentage: cash_back.percentage,
                     start: cash_back.start,
                     end: cash_back.end,
-                });
+                })
+                .execute();
         }
 
-        await db('accounts')
-            .update({
+        await db.updateTable('accounts')
+            .set({
                 name: form.data.name,
                 mask: form.data.mask,
                 official_name: form.data.official_name,
@@ -95,7 +98,8 @@ export const actions = {
                 subtype: form.data.subtype,
                 institution: form.data.institution,
             })
-            .where('id', form.data.id);
+            .where('id', '=', form.data.id)
+            .execute();
 
         redirect(303, '/accounts');
     },
@@ -116,13 +120,13 @@ export const actions = {
             return fail(400, { form })
         }
 
-        await db('transactions')
-            .delete()
-            .where('account_id', form.data.id);
+        await db.deleteFrom('transactions')
+            .where('account_id', '=', form.data.id)
+            .execute();
 
-        await db('accounts')
-            .delete()
-            .where('id', form.data.id);
+        await db.deleteFrom('accounts')
+            .where('id', '=', form.data.id)
+            .execute();
 
         redirect(303, '/accounts');
     }

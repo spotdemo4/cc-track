@@ -54,16 +54,18 @@ export const actions = {
         });
 
         form.data.accounts.forEach(async (account) => {
-            await db('accounts').insert({
-                id: account.id,
-                name: account.name,
-                mask: account.mask,
-                type: account.type,
-                subtype: account.subtype,
-                institution: form.data.institution,
-                access_token: tokenResponse.data.access_token,
-                user_id: locals.user!.id,
-            });
+            await db.insertInto('accounts')
+                .values({
+                    id: account.id,
+                    name: account.name,
+                    mask: account.mask,
+                    type: account.type,
+                    subtype: account.subtype,
+                    institution: form.data.institution,
+                    access_token: tokenResponse.data.access_token,
+                    user_id: locals.user!.id,
+                })
+                .execute();
         });
 
         redirect(303, '/accounts');

@@ -1,28 +1,21 @@
 <script lang="ts">
-	import { DollarSign } from 'lucide-svelte';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { parseDate, today, getLocalTimeZone } from '@internationalized/date';
+	import { DollarSign, PieChartIcon } from 'lucide-svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Input } from '$lib/components/ui/input';
+	import * as devalue from 'devalue';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
 	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
 	import Filter from '$lib/components/Filter.svelte';
 	import Options from '$lib/components/Options.svelte';
 	import Pagination from '$lib/components/Pagination.svelte';
+	import CategoryChart from '$lib/components/CategoryChart.svelte';
+	import CurrencyChart from '$lib/components/CurrencyChart.svelte';
 	import type { PageData } from './$types';
-	import type { DateRange } from 'bits-ui';
+	import { fade } from 'svelte/transition';
+	import { getLocalTimeZone, today } from '@internationalized/date';
 
 	export let data: PageData;
-	let date: DateRange = {
-		start: $page.url.searchParams.get('start')
-			? parseDate($page.url.searchParams.get('start')!)
-			: today(getLocalTimeZone()).subtract({ years: 1 }),
-		end: $page.url.searchParams.get('end')
-			? parseDate($page.url.searchParams.get('end')!)
-			: today(getLocalTimeZone())
-	};
 	let columns = [
 		{ checked: true, header: 'Date' },
 		{ checked: true, header: 'Account' },
@@ -32,30 +25,132 @@
 		{ checked: true, header: 'Merchant' },
 		{ checked: true, header: 'Cash Back' }
 	];
-	let merchant_filter: string = $page.url.searchParams.get('merchants') ?? '';
-	let accounts_filter: string[] = $page.url.searchParams.get('accounts')?.split(',') ?? [];
-	let categories_filter: string[] = $page.url.searchParams.get('categories')?.split(',') ?? [];
-	let page_current = parseInt($page.url.searchParams.get('page_current') ?? '1');
-	let page_size = parseInt($page.url.searchParams.get('page_size') ?? '10');
+	const settings = {
+		start: new Date(),
+		end: new Date(),
+		merchants_filter: '',
+		accounts_filter: [],
+		categories_filter: [],
+		page_current: 1,
+		page_size: 10
+	};
 
-	function formatCurrency(num: number) {
-		return num.toLocaleString('en-US', {
+	let transactions = data.stream.transactions;
+	let transactions_count = data.stream.transactions_count;
+	let revenue = data.stream.revenue;
+	let expenses = data.stream.expenses;
+	let profit = data.stream.profit;
+	let categories = data.stream.categories;
+	let subcategories = data.stream.subcategories;
+
+	async function syncTransactions() {
+		const res = await (
+			await fetch('/api/transactions', {
+				method: 'POST',
+				body: devalue.stringify(settings)
+			})
+		).text();
+		transactions = devalue.parse(res);
+	}
+
+	async function syncTransactionsCount() {
+		const res = await (
+			await fetch('/api/transactionsCount', {
+				method: 'POST',
+				body: devalue.stringify(settings)
+			})
+		).text();
+		transactions_count = devalue.parse(res);
+	}
+
+	async function syncCategories() {
+		const res = await (
+			await fetch('/api/categories', {
+				method: 'POST',
+				body: devalue.stringify(settings)
+			})
+		).text();
+		categories = devalue.parse(res);
+	}
+
+	async function syncSubcategories() {
+		const res = await (
+			await fetch('/api/subcategories', {
+				method: 'POST',
+				body: devalue.stringify(settings)
+			})
+		).text();
+		subcategories = devalue.parse(res);
+	}
+
+	async function syncRevenue() {
+		const res = await (
+			await fetch('/api/revenue', {
+				method: 'POST',
+				body: devalue.stringify(settings)
+			})
+		).text();
+		revenue = devalue.parse(res);
+	}
+
+	async function syncExpenses() {
+		const res = await (
+			await fetch('/api/expenses', {
+				method: 'POST',
+				body: devalue.stringify(settings)
+			})
+		).text();
+		expenses = devalue.parse(res);
+	}
+
+	async function syncProfit() {
+		const res = await (
+			await fetch('/api/profit', {
+				method: 'POST',
+				body: devalue.stringify(settings)
+			})
+		).text();
+		profit = devalue.parse(res);
+	}
+
+	function formatCurrency(num: number | string) {
+		return Number(num).toLocaleString('en-US', {
 			style: 'currency',
 			currency: 'USD'
 		});
+	}
+
+	function formatCategory(category: string | null, replace: string | null = null) {
+		if (!category) return 'N/A';
+		if (replace) {
+			category = category.replace(replace + '_', '');
+		}
+		return category
+			.split('_')
+			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+			.join(' ');
 	}
 </script>
 
 <div class="flex py-8 justify-between flex-wrap gap-2">
 	<h1 class="font-bold text-4xl">Dashboard</h1>
 	<DateRangePicker
-		on:change={(event) => {
-			const url = new URL($page.url.href);
-			url.searchParams.set('start', event.detail.start.toString());
-			url.searchParams.set('end', event.detail.end.toString());
-			goto(url.href, { replaceState: true });
+		on:change={async () => {
+			// console.log("TEST")
+			await syncTransactions();
+			await syncTransactionsCount();
+			await syncRevenue();
+			await syncExpenses();
+			await syncProfit();
+			await syncCategories();
+			await syncSubcategories();
 		}}
-		bind:value={date}
+		value={{
+			start: today(getLocalTimeZone()).subtract({ years: 1 }),
+			end: today(getLocalTimeZone())
+		}}
+		bind:start={settings.start}
+		bind:end={settings.end}
 	/>
 </div>
 
@@ -66,10 +161,18 @@
 			<DollarSign size="18" class="text-muted-foreground" />
 		</Card.Header>
 		<Card.Content>
-			{#await data.card_stream.revenue}
+			{#await revenue}
 				<Skeleton class="w-full h-8 rounded" />
 			{:then revenue}
-				<div class="text-2xl font-bold">{formatCurrency(revenue)}</div>
+				<div class="text-2xl font-bold">
+					{formatCurrency(revenue.reduce((n, { amount }) => n + Number(amount), 0) * -1)}
+				</div>
+				{#key revenue}
+					<CurrencyChart
+						dates={revenue.map((revenue) => revenue.month)}
+						amounts={revenue.map((revenue) => parseInt(revenue.amount.toString()) * -1)}
+					/>
+				{/key}
 			{/await}
 		</Card.Content>
 	</Card.Root>
@@ -79,10 +182,18 @@
 			<DollarSign size="18" class="text-muted-foreground" />
 		</Card.Header>
 		<Card.Content>
-			{#await data.card_stream.expenses}
+			{#await expenses}
 				<Skeleton class="w-full h-8 rounded" />
 			{:then expenses}
-				<div class="text-2xl font-bold">{formatCurrency(expenses)}</div>
+				<div class="text-2xl font-bold">
+					{formatCurrency(expenses.reduce((n, { amount }) => n + Number(amount), 0) * -1)}
+				</div>
+				{#key expenses}
+					<CurrencyChart
+						dates={expenses.map((expenses) => expenses.month)}
+						amounts={expenses.map((expenses) => parseInt(expenses.amount.toString()) * -1)}
+					/>
+				{/key}
 			{/await}
 		</Card.Content>
 	</Card.Root>
@@ -92,34 +203,77 @@
 			<DollarSign size="18" class="text-muted-foreground" />
 		</Card.Header>
 		<Card.Content>
-			{#await data.card_stream.profit}
+			{#await profit}
 				<Skeleton class="w-full h-8 rounded" />
 			{:then profit}
-				<div class="text-2xl font-bold">{formatCurrency(profit)}</div>
+				<div class="text-2xl font-bold">
+					{formatCurrency(profit.reduce((n, { amount }) => n + Number(amount), 0) * -1)}
+				</div>
+				{#key profit}
+					<CurrencyChart
+						dates={profit.map((profit) => profit.month)}
+						amounts={profit.map((profit) => parseInt(profit.amount.toString()) * -1)}
+					/>
+				{/key}
+			{/await}
+		</Card.Content>
+	</Card.Root>
+</div>
+<div class="grid gap-4 lg:grid-cols-2 py-4">
+	<Card.Root>
+		<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+			<Card.Title>Categories</Card.Title>
+			<PieChartIcon size="18" class="text-muted-foreground" />
+		</Card.Header>
+		<Card.Content>
+			{#await categories}
+				<Skeleton class="w-full h-96 rounded" />
+			{:then categories}
+				{#key categories}
+					<CategoryChart
+						amounts={categories.map((category) => category.amount)}
+						categories={categories.map((category) => formatCategory(category.category_primary))}
+					/>
+				{/key}
+			{/await}
+		</Card.Content>
+	</Card.Root>
+	<Card.Root>
+		<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
+			<Card.Title>Subcategories</Card.Title>
+			<PieChartIcon size="18" class="text-muted-foreground" />
+		</Card.Header>
+		<Card.Content>
+			{#await subcategories}
+				<Skeleton class="w-full h-96 rounded" />
+			{:then subcategories}
+				{#key subcategories}
+					<CategoryChart
+						amounts={subcategories.map((subcategory) => subcategory.amount)}
+						categories={subcategories.map((subcategory) =>
+							formatCategory(subcategory.category_detailed, subcategory.category_primary)
+						)}
+					/>
+				{/key}
 			{/await}
 		</Card.Content>
 	</Card.Root>
 </div>
 
-<div class="py-8">
+<div class="py-4">
 	<div class="flex py-2 justify-between content-center">
 		<div class="flex items-center gap-2 flex-wrap">
-			<Input 
-				type="text" 
-				placeholder="Filter merchants..." 
-				class="h-8 w-64" 
-				bind:value={merchant_filter}
-				on:change={() => {
-					const url = new URL($page.url.href);
-					if (merchant_filter !== '') {
-						url.searchParams.set('merchants', merchant_filter);
-					} else {
-						url.searchParams.delete('merchants');
-					}
-					goto(url.href, { replaceState: true });
+			<Input
+				type="text"
+				placeholder="Filter merchants..."
+				class="h-8 w-64"
+				bind:value={settings.merchants_filter}
+				on:change={async () => {
+					await syncTransactions();
+					await syncTransactionsCount();
 				}}
 			/>
-			{#await data.filter_stream.accounts}
+			{#await data.stream.accounts}
 				<Skeleton class="w-32 h-8 rounded" />
 			{:then accounts}
 				<Filter
@@ -128,36 +282,26 @@
 						label: account.name,
 						value: account.id
 					}))}
-					bind:values={accounts_filter}
-					on:change={(event) => {
-						const url = new URL($page.url.href);
-						if (event.detail.length > 0) {
-							url.searchParams.set('accounts', event.detail.join(','));
-						} else {
-							url.searchParams.delete('accounts');
-						}
-						goto(url.href, { replaceState: true });
+					bind:values={settings.accounts_filter}
+					on:change={async () => {
+						await syncTransactions();
+						await syncTransactionsCount();
 					}}
 				/>
 			{/await}
-			{#await data.filter_stream.categories}
+			{#await categories}
 				<Skeleton class="w-32 h-8 rounded" />
 			{:then categories}
 				<Filter
 					title="Category"
 					options={categories.map((category) => ({
-						label: category.name,
-						value: category.real_name
+						label: formatCategory(category.category_primary),
+						value: category.category_primary ?? ''
 					}))}
-					bind:values={categories_filter}
-					on:change={(event) => {
-						const url = new URL($page.url.href);
-						if (event.detail.length > 0) {
-							url.searchParams.set('categories', event.detail.join(','));
-						} else {
-							url.searchParams.delete('categories');
-						}
-						goto(url.href, { replaceState: true });
+					bind:values={settings.categories_filter}
+					on:change={async () => {
+						await syncTransactions();
+						await syncTransactionsCount();
 					}}
 				/>
 			{/await}
@@ -175,63 +319,71 @@
 					{/each}
 				</Table.Row>
 			</Table.Header>
-			<Table.Body>
-				{#await data.table_stream.transactions}
-					<Table.Row>
-						{#each columns as column}
-							{#if column.checked}
-								<Table.Cell>
-									<Skeleton class="w-full h-8 rounded" />
-								</Table.Cell>
-							{/if}
+			{#key transactions}
+				<tbody in:fade>
+					{#await transactions}
+						{#each Array(settings.page_size) as _}
+							<Table.Row>
+								{#each columns as column}
+									{#if column.checked}
+										<Table.Cell>
+											<Skeleton class="w-full h-5 rounded" />
+										</Table.Cell>
+									{/if}
+								{/each}
+							</Table.Row>
 						{/each}
-					</Table.Row>
-				{:then transactions}
-					{#each transactions as transaction}
-						<Table.Row>
-							{#if columns[0].checked}
-								<Table.Cell>{transaction.date.toLocaleDateString()}</Table.Cell>
-							{/if}
-							{#if columns[1].checked}
-								<Table.Cell>{transaction.account_name}</Table.Cell>
-							{/if}
-							{#if columns[2].checked}
-								<Table.Cell>{formatCurrency(transaction.amount)}</Table.Cell>
-							{/if}
-							{#if columns[3].checked}
-								<Table.Cell>{transaction.category_primary}</Table.Cell>
-							{/if}
-							{#if columns[4].checked}
-								<Table.Cell>{transaction.category_detailed}</Table.Cell>
-							{/if}
-							{#if columns[5].checked}
-								<Table.Cell>{transaction.merchant_name ?? ''}</Table.Cell>
-							{/if}
-							{#if columns[6].checked}
-								<Table.Cell>{transaction.cash_back ? Number(transaction.cash_back.percentage) + "%" : ''}</Table.Cell>
-							{/if}
-						</Table.Row>
-					{/each}
-				{/await}
-			</Table.Body>
+					{:then transactions}
+						{#each transactions as transaction}
+							<Table.Row>
+								{#if columns[0].checked}
+									<Table.Cell>{transaction.date.toLocaleDateString()}</Table.Cell>
+								{/if}
+								{#if columns[1].checked}
+									<Table.Cell>{transaction.account_name}</Table.Cell>
+								{/if}
+								{#if columns[2].checked}
+									<Table.Cell>{formatCurrency(Number(transaction.amount) * -1)}</Table.Cell>
+								{/if}
+								{#if columns[3].checked}
+									<Table.Cell>{formatCategory(transaction.category_primary)}</Table.Cell>
+								{/if}
+								{#if columns[4].checked}
+									<Table.Cell
+										>{formatCategory(
+											transaction.category_detailed,
+											transaction.category_primary
+										)}</Table.Cell
+									>
+								{/if}
+								{#if columns[5].checked}
+									<Table.Cell>{transaction.merchant_name ?? ''}</Table.Cell>
+								{/if}
+								{#if columns[6].checked}
+									<Table.Cell
+										>{transaction.cash_back ? Number(transaction.cash_back.percentage) + '%' : ''}
+									</Table.Cell>
+								{/if}
+							</Table.Row>
+						{/each}
+					{/await}
+				</tbody>
+			{/key}
 		</Table.Root>
 	</div>
-	{#await data.table_stream.transactions_count}
-		<Skeleton class="w-full h-8 rounded" />
+	{#await transactions_count}
+		<Skeleton class="w-full h-8 my-2 rounded" />
 	{:then count}
-		<Pagination 
-			page_count={Math.ceil(count / page_size)} 
-			bind:page_current 
-			bind:page_size 
-			on:pageChange={(event) => {
-				const url = new URL($page.url.href);
-				url.searchParams.set('page_current', event.detail.toString());
-				goto(url.href, { replaceState: true });
+		<Pagination
+			page_count={Math.ceil(count / settings.page_size)}
+			bind:page_current={settings.page_current}
+			bind:page_size={settings.page_size}
+			on:pageChange={async () => {
+				await syncTransactions();
 			}}
-			on:sizeChange={(event) => {
-				const url = new URL($page.url.href);
-				url.searchParams.set('page_size', event.detail.toString());
-				goto(url.href, { replaceState: true });
+			on:sizeChange={async () => {
+				await syncTransactions();
+				await syncTransactionsCount();
 			}}
 		/>
 	{/await}

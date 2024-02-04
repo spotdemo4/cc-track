@@ -109,7 +109,10 @@
 						}))
 						.concat(
 							data.categories.map((category) => ({
-								label: formatCategory(category.PRIMARY) + ": " + formatCategory(category.DETAILED.replace(category.PRIMARY + '_', '')),
+								label:
+									formatCategory(category.PRIMARY) +
+									': ' +
+									formatCategory(category.DETAILED.replace(category.PRIMARY + '_', '')),
 								value: category.DETAILED
 							}))
 						)}
@@ -136,8 +139,8 @@
 			</div>
 			<DateRangePicker
 				on:change={(event) => {
-					$form.cash_back[i].start = event.detail.start.toDate();
-					$form.cash_back[i].end = event.detail.end.toDate();
+					$form.cash_back[i].start = event.detail.start;
+					$form.cash_back[i].end = event.detail.end;
 				}}
 				value={getDateRangeValue(i)}
 			/>

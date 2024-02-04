@@ -33,7 +33,7 @@ export const actions = {
             return fail(400, { form })
         }
 
-        const user = await db.select('id', 'email', 'password', 'name').from('users').where('email', form.data.email).first();
+        const user = await db.selectFrom('users').selectAll().where('email', '=', form.data.email).executeTakeFirst();
         form.errors.password = ['Invalid email or password.'];
 
         if (!user) {
@@ -69,7 +69,7 @@ export const actions = {
             return fail(400, { form })
         }
 
-        const user = await db.select('id', 'email', 'password', 'name').from('users').where('email', form.data.email).first();
+        const user = await db.selectFrom('users').selectAll().where('email', '=', form.data.email).executeTakeFirst();
 
         if (user) {
             form.errors.email = ['Email already in use.'];
@@ -78,14 +78,17 @@ export const actions = {
 
         const password = await bcrypt.hash(form.data.password, 10);
 
-        const [insert] = await db('users').insert({
-            email: form.data.email,
-            password: password,
-            name: form.data.email,
-        }).returning('id');
+        const user_insert = await db.insertInto('users')
+            .values({
+                email: form.data.email,
+                password: password,
+                name: form.data.email,
+            })
+            .returning('id')
+            .executeTakeFirst();
 
         const token = jsonwebtoken.sign(
-            { email: form.data.email, name: form.data.email, id: insert.id },
+            { email: form.data.email, name: form.data.email, id: user_insert?.id },
             JWT_SECRET,
             { expiresIn: '1d' }
         )
