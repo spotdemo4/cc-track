@@ -6,6 +6,7 @@ services:
       context: .
       args:
         JWT_SECRET: ${JWT_SECRET}
+        PLAID_ENVIRONMENT: ${PLAID_ENVIRONMENT}
         PLAID_CLIENT_ID: ${PLAID_CLIENT_ID}
         PLAID_SECRET: ${PLAID_SECRET}
         DB_HOST: cctrack_db
