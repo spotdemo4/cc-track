@@ -14,10 +14,9 @@ services:
         DB_USER: ${DB_USER}
         DB_PASS: ${DB_PASS}
         DB_NAME: ${DB_NAME}
+        ORIGIN: ${ORIGIN}
+        TZ: 'America/New_York'
     container_name: cctrack
-    environment:
-      ORIGIN: ${ORIGIN}
-      TZ: 'America/New_York'
     ports:
       - '3000:3000'
     depends_on:
