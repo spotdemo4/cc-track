@@ -11,7 +11,7 @@
 	let options: ApexOptions = {
 		chart: {
 			type: 'pie',
-			height: 500,
+			height: 400,
 			foreColor: '#fff'
 		},
 		tooltip: {
@@ -41,6 +41,6 @@
 	});
 </script>
 
-<div class="h-96 overflow-auto">
+<div class="h-96 overflow-y-auto">
 	<div id="chart" bind:this={chart} />
 </div>
