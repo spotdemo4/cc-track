@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { formatCurrency } from '$lib/utils';
-    import type { ApexOptions } from 'apexcharts';
+	import type { ApexOptions } from 'apexcharts';
 
-    export let amounts: number[] = [];
-    export let categories: string[] = [];
+	export let amounts: number[] = [];
+	export let categories: string[] = [];
 	let chart: HTMLElement;
-    let apexChart: ApexCharts;
+	let apexChart: ApexCharts;
 
 	let options: ApexOptions = {
 		chart: {
 			type: 'pie',
-			height: 300,
-            foreColor: '#fff',
+			height: 500,
+			foreColor: '#fff'
 		},
 		tooltip: {
 			enabled: true,
@@ -20,15 +20,15 @@
 			y: {
 				formatter: (val) => {
 					return formatCurrency(val);
-				},
-			},
+				}
+			}
 		},
 		legend: {
 			show: true,
-			position: 'bottom',
+			position: 'bottom'
 		},
 		series: amounts.map((d) => parseInt(d.toString())),
-		labels: categories.map((category) => category),
+		labels: categories.map((category) => category)
 	};
 	onMount(async () => {
 		const ApexCharts = (await import('apexcharts')).default;
@@ -36,9 +36,11 @@
 		await apexChart.render();
 	});
 
-    onDestroy(() => {
-        apexChart.destroy();
-    });
+	onDestroy(() => {
+		apexChart.destroy();
+	});
 </script>
 
-<div id="chart" style="h-96" bind:this={chart} />
+<div class="h-96 overflow-auto">
+	<div id="chart" bind:this={chart} />
+</div>
