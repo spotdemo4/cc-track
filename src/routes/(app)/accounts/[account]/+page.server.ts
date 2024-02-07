@@ -15,13 +15,23 @@ const schema = z.object({
     type: z.string().min(1),
     subtype: z.string().min(1),
     institution: z.string().min(1),
+    limit: z.coerce.number().nullish(),
+    limit_timeframe: z.string().nullish(),
     cash_back: z.object({
         category: z.string().min(1),
         percentage: z.coerce.number().min(0).max(100),
         start: z.date().nullish(),
         end: z.date().nullish(),
     }).array().default([]),
-});
+}).refine(schema => {
+    if (schema.limit && !schema.limit_timeframe) {
+        return false;
+    } else if (!schema.limit && schema.limit_timeframe) {
+        return false;
+    }
+
+    return true;
+}, { path: ['limit'], message: 'Limit and timeframe must be set together' });
 
 export const load: PageServerLoad = async ({ locals, params }) => {
     if (!locals.user) {
@@ -39,6 +49,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         form.data.type = account.type;
         form.data.subtype = account.subtype ?? '';
         form.data.institution = account.institution;
+        form.data.limit = account.limit ? Number(account.limit) : null;
+        form.data.limit_timeframe = account.limit_timeframe ?? '';
         form.data.cash_back = (await getCashBacks(account.id)).map((cash_back) => {
             return {
                 category: cash_back.category,
@@ -65,7 +77,6 @@ export const actions = {
         const accounts = await getAccounts(locals.user.id);
 
         if (!form.valid) {
-            console.log(form.data.cash_back);
             return fail(400, { form })
         }
 
@@ -97,6 +108,8 @@ export const actions = {
                 type: form.data.type,
                 subtype: form.data.subtype,
                 institution: form.data.institution,
+                limit: form.data.limit,
+                limit_timeframe: form.data.limit_timeframe,
             })
             .where('id', '=', form.data.id)
             .execute();

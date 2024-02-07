@@ -1,5 +1,5 @@
 import { redirect } from '@sveltejs/kit';
-import { getAccounts, getBalance, getDebt, getNetWorth } from '$lib/db/accounts';
+import { getAccountsWithTotals, getBalance, getDebt, getNetWorth } from '$lib/db/accounts';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 
     return {
         stream: {
-            accounts: getAccounts(locals.user.id),
+            accounts: getAccountsWithTotals(locals.user.id),
             balance: getBalance(locals.user.id),
             debt: getDebt(locals.user.id),
             net_worth: getNetWorth(locals.user.id),

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import { formatCurrency } from '$lib/utils';
     import type { ApexOptions } from 'apexcharts'
     import type ApexCharts from 'apexcharts';
 
@@ -29,7 +30,13 @@
             categories: dates.map((d) => d.toLocaleString('default', { month: 'long', year: 'numeric' }))
         },
         tooltip: {
-            theme: 'dark'
+            theme: 'dark',
+			enabled: true,
+			y: {
+				formatter: (val) => {
+					return formatCurrency(val);
+				}
+			}
         },
 		colors: ['#DCE6EC', '#E91E63', '#9C27B0']
 	};

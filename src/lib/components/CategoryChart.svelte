@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import { formatCurrency } from '$lib/utils';
     import type { ApexOptions } from 'apexcharts';
 
     export let amounts: number[] = [];
@@ -11,12 +12,24 @@
 		chart: {
 			type: 'pie',
 			height: 300,
-            foreColor: '#fff'
+            foreColor: '#fff',
+		},
+		tooltip: {
+			enabled: true,
+			theme: 'dark',
+			y: {
+				formatter: (val) => {
+					return formatCurrency(val);
+				},
+			},
+		},
+		legend: {
+			show: true,
+			position: 'bottom',
 		},
 		series: amounts.map((d) => parseInt(d.toString())),
-		labels: categories
+		labels: categories.map((category) => category),
 	};
-
 	onMount(async () => {
 		const ApexCharts = (await import('apexcharts')).default;
 		apexChart = new ApexCharts(chart, options);

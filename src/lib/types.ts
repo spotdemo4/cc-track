@@ -24,6 +24,8 @@ export interface Accounts {
   subtype: string | null;
   type: string;
   user_id: number;
+  limit: Numeric | null;
+  limit_timeframe: string | null;
 }
 
 export interface CashBack {

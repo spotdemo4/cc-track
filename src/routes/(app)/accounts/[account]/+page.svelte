@@ -4,6 +4,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import * as Select from '$lib/components/ui/select';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import Combobox from '$lib/components/Combobox.svelte';
 	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
@@ -95,6 +96,38 @@
 		</span>
 		{#if $errors.subtype}
 			<span class="text-red-500 text-sm">{$errors.subtype.join(', ')}</span>
+		{/if}
+	</div>
+	<div class="flex flex-col w-full max-w-sm gap-1.5">
+		<Label for="subtype">Spending limit</Label>
+		<div class="flex gap-2">
+			<Input type="number" step="0.01" id="limit" bind:value={$form.limit} />
+			<Select.Root
+				onSelectedChange={(test) => {
+					$form.limit_timeframe = String(test?.value);
+				}}
+				selected={$form.limit_timeframe
+					? {
+							value: $form.limit_timeframe,
+							label: $form.limit_timeframe.at(0)?.toUpperCase() + $form.limit_timeframe.slice(1)
+						}
+					: undefined}
+			>
+				<Select.Trigger>
+					<Select.Value>{$form.limit_timeframe}</Select.Value>
+				</Select.Trigger>
+				<Select.Content>
+					<Select.Item value="month">Month</Select.Item>
+					<Select.Item value="quarter">Quarter</Select.Item>
+					<Select.Item value="year">Year</Select.Item>
+				</Select.Content>
+			</Select.Root>
+		</div>
+		<span class="text-sm text-muted-foreground">
+			Limit spending by setting a maximum amount for this account, as well as a time period
+		</span>
+		{#if $errors.limit}
+			<span class="text-red-500 text-sm">{$errors.limit.join(', ')}</span>
 		{/if}
 	</div>
 	{#each $form.cash_back as _, i}

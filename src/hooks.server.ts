@@ -102,6 +102,18 @@ if (!building) {
                     .execute();
             }
 
+            // Migration
+            if (!tables.find((table) => table.name == 'accounts')?.columns.find((column) => column.name == 'limit')) {
+                await db.schema.alterTable('accounts')
+                    .addColumn('limit', 'numeric(14, 2)')
+                    .execute();
+            }
+            if (!tables.find((table) => table.name == 'accounts')?.columns.find((column) => column.name == 'limit_timeframe')) {
+                await db.schema.alterTable('accounts')
+                    .addColumn('limit_timeframe', 'text')
+                    .execute();
+            }
+
             connected = true;
         } catch (e) {
             console.log(e);

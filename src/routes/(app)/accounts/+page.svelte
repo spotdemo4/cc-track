@@ -3,16 +3,10 @@
 	import { DollarSign } from 'lucide-svelte';
 	import { PlusSquare } from 'lucide-svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { formatCurrency } from '$lib/utils';
 	import * as Card from '$lib/components/ui/card';
 
 	export let data: PageData;
-
-	function formatCurrency(num: number | string) {
-		return Number(num).toLocaleString('en-US', {
-			style: 'currency',
-			currency: 'USD'
-		});
-	}
 </script>
 
 <h1 class="font-bold text-4xl py-8">Accounts</h1>
@@ -76,6 +70,12 @@
 						<Card.Description>{account.institution} / {account.type} / {account.subtype}</Card.Description>
 					</Card.Header>
 					<Card.Content class="flex flex-col gap-2">
+						{#if account.total != undefined && account.limit}
+							<div class="flex flex-row items-center justify-between gap-2 space-y-0 {account.total > Number(account.limit) ? 'bg-red-900 rounded-md px-2' : ''}">
+								<h1 class="font-bold">Limit</h1>
+								{formatCurrency(account.total)} / {formatCurrency(account.limit)}
+							</div>
+						{/if}
 						{#if account.balance_current}
 							<div class="flex flex-row items-center justify-between gap-2 space-y-0">
 								<h1 class="font-bold">Current Balance</h1>
@@ -90,7 +90,7 @@
 						{/if}
 						{#if account.balance_limit}
 							<div class="flex flex-row items-center justify-between gap-2 space-y-0">
-								<h1 class="font-bold">Limit</h1>
+								<h1 class="font-bold">Credit Limit</h1>
 								{formatCurrency(account.balance_limit)}
 							</div>
 						{/if}

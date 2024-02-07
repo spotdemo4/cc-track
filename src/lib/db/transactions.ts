@@ -19,6 +19,7 @@ export async function getRevenue(user_id: number, start: Date, end: Date) {
         .where('amount', '<', '0')
         .where('date', '>=', start)
         .where('date', '<=', end)
+        .where('category_primary', '!=', 'LOAN_PAYMENTS')
         .groupBy(sql`DATE_TRUNC('month', date)`)
         .orderBy('month', 'asc')
         .execute();
@@ -39,28 +40,29 @@ export async function getExpenses(user_id: number, start: Date, end: Date) {
         .where('amount', '>', '0')
         .where('date', '>=', start)
         .where('date', '<=', end)
+        .where('category_primary', '!=', 'LOAN_PAYMENTS')
         .groupBy(sql`DATE_TRUNC('month', date)`)
         .orderBy('month', 'asc')
         .execute();
 }
 
 export async function getProfit(user_id: number, start: Date, end: Date) {
-    const account_ids = (await getAccounts(user_id)).map((account) => account.id);
-    if (account_ids.length === 0) {
-        return [];
+    const revenue = await getRevenue(user_id, start, end);
+    const expenses = await getExpenses(user_id, start, end);
+
+    const length = Math.max(revenue.length, expenses.length);
+
+    let profit = [];
+    for (let i = 0; i < length; i++) {
+        const month = revenue[i]?.month ?? expenses[i]?.month;
+        const amount = (Number(revenue[i]?.amount ?? 0)) + (Number(expenses[i]?.amount ?? 0));
+        profit.push({
+            month: month,
+            amount: amount
+        });
     }
 
-    return await db.selectFrom('transactions')
-        .select(({ fn }) => [
-            sql<Date>`DATE_TRUNC('month', date)`.as('month'),
-            fn.sum('amount').as('amount')
-        ])
-        .where('account_id', 'in', account_ids)
-        .where('date', '>=', start)
-        .where('date', '<=', end)
-        .groupBy(sql`DATE_TRUNC('month', date)`)
-        .orderBy('month', 'asc')
-        .execute();
+    return profit;
 }
 
 
@@ -79,6 +81,7 @@ export async function getCategories(user_id: number, start: Date, end: Date) {
         .where('amount', '>', '0')
         .where('date', '>=', start)
         .where('date', '<=', end)
+        .where('category_primary', '!=', 'LOAN_PAYMENTS')
         .groupBy('category_primary')
         .orderBy('amount', 'desc')
         .execute();
@@ -100,6 +103,7 @@ export async function getSubcategories(user_id: number, start: Date, end: Date) 
         .where('amount', '>', '0')
         .where('date', '>=', start)
         .where('date', '<=', end)
+        .where('category_primary', '!=', 'LOAN_PAYMENTS')
         .groupBy('category_detailed')
         .groupBy('category_primary')
         .orderBy('amount', 'desc')

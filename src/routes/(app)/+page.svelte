@@ -14,6 +14,7 @@
 	import type { PageData } from './$types';
 	import { fade } from 'svelte/transition';
 	import { getLocalTimeZone, today } from '@internationalized/date';
+	import { formatCurrency } from '$lib/utils';
 
 	export let data: PageData;
 	let columns = [
@@ -111,13 +112,6 @@
 			})
 		).text();
 		profit = devalue.parse(res);
-	}
-
-	function formatCurrency(num: number | string) {
-		return Number(num).toLocaleString('en-US', {
-			style: 'currency',
-			currency: 'USD'
-		});
 	}
 
 	function formatCategory(category: string | null, replace: string | null = null) {
