@@ -51,16 +51,12 @@ export async function getAccounts(user_id: number) {
     return await db.selectFrom('accounts')
         .selectAll()
         .where('user_id', '=', user_id)
+        .orderBy('name', 'asc')
         .execute();
 }
 
 export async function getAccountsWithTotals(user_id: number) {
-    let accounts_db = db.selectFrom('accounts')
-        .selectAll()
-        .where('user_id', '=', user_id)
-        .execute();
-    
-    const accounts = await accounts_db;
+    const accounts = await getAccounts(user_id);
 
     let n_accounts = [];
     for (let account of accounts) {
