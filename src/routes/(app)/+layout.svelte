@@ -8,6 +8,7 @@
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { LayoutData } from './$types';
+	import { onMount } from 'svelte';
 
 	export let data: LayoutData;
 	let refreshing = false;
@@ -55,6 +56,26 @@
 			goto('/login');
 		}
 	}
+
+	async function detectSWupdate() {
+		const registration = await navigator.serviceWorker.getRegistration();
+
+		registration?.addEventListener('updatefound', () => {
+			const newSW = registration.installing;
+			newSW?.addEventListener('statechange', () => {
+				if (newSW.state === 'installed') {
+					newSW.postMessage({ type: 'SKIP_WAITING' });
+					toast.info('New version available!', {
+						description: 'Please refresh the page to update.'
+					});
+				}
+			});
+		});
+	}
+
+	onMount(() => {
+		detectSWupdate();
+	});
 </script>
 
 <Toaster />
@@ -65,8 +86,9 @@
 	<a href="/" class="font-bold tracking-wider">CCTrack</a>
 	<a
 		href="/"
-		class="{$page.route.id == '/(app)' ? 'text-neutral-100' : 'text-neutral-400'} hover:text-neutral-100"
-		>Dashboard</a
+		class="{$page.route.id == '/(app)'
+			? 'text-neutral-100'
+			: 'text-neutral-400'} hover:text-neutral-100">Dashboard</a
 	>
 	<a
 		href="/accounts"
