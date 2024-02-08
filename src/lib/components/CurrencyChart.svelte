@@ -10,7 +10,7 @@
     let apexChart: ApexCharts;
 
 	console.log(dates);
-	console.log(dates.map((d) =>  d.toLocaleString('default', { month: 'long', year: 'numeric' })));
+	console.log(dates.map((d) =>  d.toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' })));
 
 	let options: ApexOptions = {
 		chart: {
@@ -30,7 +30,7 @@
 			curve: 'straight'
 		},
         xaxis: {
-            categories: dates.map((d) => d.toLocaleString('default', { month: 'long', year: 'numeric' }))
+            categories: dates.map((d) => d.toLocaleString('default', { month: 'long', year: 'numeric', timeZone: 'UTC' }))
         },
         tooltip: {
             theme: 'dark',

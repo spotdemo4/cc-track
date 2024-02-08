@@ -15,7 +15,7 @@ services:
         DB_PASS: ${DB_PASS}
         DB_NAME: ${DB_NAME}
         ORIGIN: ${ORIGIN}
-        TZ: 'America/New_York'
+        TZ: ${TZ}
     container_name: cctrack
     ports:
       - '3000:3000'
