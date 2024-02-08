@@ -1,10 +1,14 @@
 <script lang="ts">
-	import { DollarSign, PieChartIcon } from 'lucide-svelte';
+	import { AlertCircle, DollarSign, PieChartIcon } from 'lucide-svelte';
 	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { Input } from '$lib/components/ui/input';
+	import { fade } from 'svelte/transition';
+	import { getLocalTimeZone, today } from '@internationalized/date';
+	import { formatCurrency, capitalize } from '$lib/utils';
 	import * as devalue from 'devalue';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
+	import * as Alert from '$lib/components/ui/alert';
 	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
 	import Filter from '$lib/components/Filter.svelte';
 	import Options from '$lib/components/Options.svelte';
@@ -12,9 +16,6 @@
 	import CategoryChart from '$lib/components/CategoryChart.svelte';
 	import CurrencyChart from '$lib/components/CurrencyChart.svelte';
 	import type { PageData } from './$types';
-	import { fade } from 'svelte/transition';
-	import { getLocalTimeZone, today } from '@internationalized/date';
-	import { formatCurrency } from '$lib/utils';
 
 	export let data: PageData;
 	let columns = [
@@ -130,7 +131,6 @@
 	<h1 class="font-bold text-4xl">Dashboard</h1>
 	<DateRangePicker
 		on:change={async () => {
-			// console.log("TEST")
 			await syncTransactions();
 			await syncTransactionsCount();
 			await syncRevenue();
@@ -148,7 +148,19 @@
 	/>
 </div>
 
-<div class="grid gap-4 lg:grid-cols-3">
+{#await data.stream.warnings then warnings}
+	{#each warnings as warning}
+		<Alert.Root class="mb-2 {warning.type == 'error' ? 'bg-red-900' : 'bg-yellow-900'}">
+			<AlertCircle class="h-4 w-4" />
+			<Alert.Title>{capitalize(warning.title)} {capitalize(warning.type)}</Alert.Title>
+			<Alert.Description>
+				{warning.message}
+			</Alert.Description>
+		</Alert.Root>
+	{/each}
+{/await}
+
+<div class="grid gap-4 lg:grid-cols-3 pb-2">
 	<Card.Root>
 		<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
 			<Card.Title>Revenue</Card.Title>
@@ -213,7 +225,7 @@
 		</Card.Content>
 	</Card.Root>
 </div>
-<div class="grid gap-4 lg:grid-cols-2 py-4">
+<div class="grid gap-4 lg:grid-cols-2 py-2">
 	<Card.Root>
 		<Card.Header class="flex flex-row items-center justify-between space-y-0 pb-2">
 			<Card.Title>Categories</Card.Title>
@@ -254,7 +266,7 @@
 	</Card.Root>
 </div>
 
-<div class="py-4">
+<div class="py-2">
 	<div class="flex py-2 justify-between content-center">
 		<div class="flex items-center gap-2 flex-wrap">
 			<Input

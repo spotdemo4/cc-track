@@ -67,3 +67,7 @@ export function formatCurrency(num: number | string) {
         currency: 'USD'
     });
 }
+
+export function capitalize(s: string) {
+    return s.charAt(0).toUpperCase() + s.slice(1);
+}

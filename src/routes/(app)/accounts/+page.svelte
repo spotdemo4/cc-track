@@ -67,11 +67,21 @@
 							<Card.Title>{account.name}</Card.Title>
 							<h2 class="text-neutral-400">{account.mask}</h2>
 						</div>
-						<Card.Description>{account.institution} / {account.type} / {account.subtype}</Card.Description>
+						<Card.Description
+							>{account.institution} / {account.type} / {account.subtype}</Card.Description
+						>
 					</Card.Header>
 					<Card.Content class="flex flex-col gap-2">
 						{#if account.total != undefined && account.limit}
-							<div class="flex flex-row items-center justify-between gap-2 space-y-0 {account.total > Number(account.limit) ? 'bg-red-900 rounded-md px-2' : ''}">
+							<div
+								class="flex flex-row items-center justify-between gap-2 space-y-0 rounded-md 
+								{account.total > Number(account.limit)
+									? 'bg-red-900'
+									: account.total > Number(account.limit) * 0.9
+										? 'bg-yellow-900'
+										: ''
+								}"
+							>
 								<h1 class="font-bold">Limit</h1>
 								{formatCurrency(account.total)} / {formatCurrency(account.limit)}
 							</div>
@@ -94,7 +104,7 @@
 								{formatCurrency(account.balance_limit)}
 							</div>
 						{/if}
-                        {#if account.official_name}
+						{#if account.official_name}
 							{account.official_name}
 						{/if}
 					</Card.Content>

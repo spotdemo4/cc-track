@@ -1,4 +1,5 @@
 import { db } from '$lib/db';
+import { getTotal } from '$lib/db/transactions';
 import { plaidClient } from '$lib/plaid';
 
 export async function getBalance(user_id: number) {
@@ -110,41 +111,4 @@ export async function syncAccounts(user_id: number) {
     }
 
     return true;
-}
-
-export async function getTotal(account_id: string, timeframe: string) {
-    let query = db.selectFrom('transactions')
-        .select(({ fn }) => [
-            fn.sum<number>('amount').as('amount')
-        ])
-        .where('account_id', '=', account_id)
-        .where('amount', '>', '0')
-        .groupBy('account_id');
-
-    const date = new Date();
-    if (timeframe === 'month') {
-        let firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-        let lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        query = query
-            .where('date', '>=', firstDay)
-            .where('date', '<=', lastDay);
-    } else if (timeframe === 'year') {
-        let firstDay = new Date(date.getFullYear(), 0, 1);
-        let lastDay = new Date(date.getFullYear(), 11, 31);
-        console.log(firstDay);
-        console.log(lastDay);
-        query = query
-            .where('date', '>=', firstDay)
-            .where('date', '<=', lastDay);
-    } else if (timeframe === 'quarter') {
-        let firstDay = new Date(date.getFullYear(), Math.floor(date.getMonth() / 3) * 3, 1);
-        let lastDay = new Date(date.getFullYear(), Math.floor(date.getMonth() / 3) * 3 + 3, 0);
-        console.log(firstDay);
-        console.log(lastDay);
-        query = query
-            .where('date', '>=', firstDay)
-            .where('date', '<=', lastDay);
-    }
-
-    return await query.executeTakeFirst();
 }
