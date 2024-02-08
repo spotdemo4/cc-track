@@ -16,7 +16,7 @@
 		chart: {
 			type: 'pie',
 			height: 350,
-			foreColor: '#fff',
+			foreColor: '#fff'
 		},
 		tooltip: {
 			enabled: true,
@@ -28,17 +28,18 @@
 			}
 		},
 		legend: {
-			show: true,
+			show: true
 		},
 		series: amounts.map((d) => parseInt(d.toString())),
-		labels: categories
+		labels: categories,
+		colors: ['#890000', '#ae3d00', '#4a3c00', '#3b5828', '#014c63']
 	};
 
 	let smolOptions: ApexOptions = {
 		chart: {
 			type: 'pie',
 			height: 1000,
-			foreColor: '#fff',
+			foreColor: '#fff'
 		},
 		tooltip: {
 			enabled: true,
@@ -54,9 +55,10 @@
 			position: 'bottom'
 		},
 		series: amounts.map((d) => parseInt(d.toString())),
-		labels: categories
+		labels: categories,
+		colors: ['#890000', '#ae3d00', '#4a3c00', '#3b5828', '#014c63']
 	};
-	
+
 	onMount(async () => {
 		const ApexCharts = (await import('apexcharts')).default;
 		apexChart = new ApexCharts(chart, options);
