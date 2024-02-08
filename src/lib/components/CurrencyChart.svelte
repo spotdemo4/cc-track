@@ -9,6 +9,8 @@
 	let chart: HTMLElement;
     let apexChart: ApexCharts;
 
+	console.log(dates.map((d) =>  d.toLocaleString('default', { month: 'long', year: 'numeric' })));
+
 	let options: ApexOptions = {
 		chart: {
 			type: 'line',
