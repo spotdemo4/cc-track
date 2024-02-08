@@ -50,17 +50,21 @@ export async function getProfit(user_id: number, start: Date, end: Date) {
     const revenue = await getRevenue(user_id, start, end);
     const expenses = await getExpenses(user_id, start, end);
 
-    const length = Math.max(revenue.length, expenses.length);
-
-    let profit = [];
-    for (let i = 0; i < length; i++) {
-        const month = revenue[i]?.month ?? expenses[i]?.month;
-        const amount = (Number(revenue[i]?.amount ?? 0)) + (Number(expenses[i]?.amount ?? 0));
-        profit.push({
-            month: month,
-            amount: amount
-        });
-    }
+    let profit: { month: Date, amount: number }[] = [];
+    expenses.forEach((expense) => {
+        const rev = revenue.find((revenue) => revenue.month.getTime() === expense.month.getTime());
+        if (rev) {
+            profit.push({
+                month: expense.month,
+                amount: Number(rev.amount) + Number(expense.amount)
+            });
+        } else {
+            profit.push({
+                month: expense.month,
+                amount: Number(expense.amount)
+            });
+        }
+    });
 
     return profit;
 }
