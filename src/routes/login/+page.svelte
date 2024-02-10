@@ -50,6 +50,8 @@
 			body: devalue.stringify(authRes)
 		});
 
+		console.log(await verificationResp.text());
+
 		// Wait for the results of verification
 		const verificationJSON = await verificationResp.json();
 
