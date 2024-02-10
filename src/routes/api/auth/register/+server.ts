@@ -20,6 +20,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
     const body = await request.json();
 
+    console.log(body);
+
     let verification;
     try {
         verification = await verifyRegistrationResponse({
