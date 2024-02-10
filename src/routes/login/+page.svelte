@@ -28,17 +28,12 @@
 		let authRes;
 		try {
 			// Pass the options to the authenticator and wait for a response
-			console.log(data.options);
 			authRes = await startAuthentication(data.options);
-			console.log(authRes);
 		} catch (err: any) {
-			console.log(err);
 			// Some basic error handling
 			error = err;
 			throw err;
 		}
-
-		console.log(authRes);
 
 		const verificationResp = await fetch('/api/auth/authtest', {
 			method: 'POST',
@@ -47,8 +42,6 @@
 			},
 			body: devalue.stringify(authRes)
 		});
-
-		console.log(await verificationResp.text());
 
 		// Wait for the results of verification
 		const verificationJSON = await verificationResp.json();
