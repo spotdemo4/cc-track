@@ -35,7 +35,7 @@
 			throw err;
 		}
 
-		const verificationResp = await fetch('/api/auth/authtest', {
+		const verificationResp = await fetch('/api/auth/authentication', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
