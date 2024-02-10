@@ -34,6 +34,8 @@
 			throw err;
 		}
 
+		console.log(authRes);
+
 		// POST the response to the endpoint that calls
 		// @simplewebauthn/server -> verifyAuthenticationResponse()
 		const verificationResp = await fetch('/api/auth/authentication', {
