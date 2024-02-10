@@ -30,6 +30,8 @@ function formatAuthenticator(authenticator: {
 }
 
 export const POST: RequestHandler = async ({ request, cookies }) => {
+    console.log("POSTING!");
+    
     const user_email = cookies.get('user_email');
 
     if (!user_email) {
