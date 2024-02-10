@@ -20,7 +20,7 @@ function formatAuthenticators(authenticators: {
     counter: string;
     credentialBackedUp: boolean;
     credentialDeviceType: string;
-    credentialID: string;
+    credentialID: Buffer;
     credentialPublicKey: Buffer;
     transports: string | null;
     user_id: number;
@@ -28,7 +28,7 @@ function formatAuthenticators(authenticators: {
 ) {
     let allowedCredentials: PublicKeyCredentialDescriptorFuture[] = [];
     for (let authenticator of authenticators) {
-        const id = Buffer.from(authenticator.credentialID);
+        const id = authenticator.credentialID;
         const type = 'public-key';
         if (authenticator.transports) {
             const transports = authenticator.transports.includes(',') ? authenticator.transports.split(',') as AuthenticatorTransportFuture[] : [authenticator.transports] as AuthenticatorTransportFuture[];

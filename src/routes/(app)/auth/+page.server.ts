@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { db } from '$lib/db';
 import { rpName, rpID } from '$lib/auth';
+import { base64URLStringToBuffer } from '@simplewebauthn/browser';
 import { generateRegistrationOptions } from '@simplewebauthn/server';
 import type { AuthenticatorTransportFuture, PublicKeyCredentialDescriptorFuture } from '@simplewebauthn/types';
 import type { PageServerLoad } from './$types';
@@ -9,7 +10,7 @@ function formatAuthenticators(authenticators: {
     counter: string;
     credentialBackedUp: boolean;
     credentialDeviceType: string;
-    credentialID: string;
+    credentialID: Buffer;
     credentialPublicKey: Buffer;
     transports: string | null;
     user_id: number;
@@ -17,7 +18,7 @@ function formatAuthenticators(authenticators: {
 ) {
     let excludeCredentials: PublicKeyCredentialDescriptorFuture[] = [];
     for (let authenticator of authenticators) {
-        const id = Buffer.from(authenticator.credentialID);
+        const id = authenticator.credentialID;
         const type = 'public-key';
         if (authenticator.transports) {
             const transports = authenticator.transports.includes(',') ? authenticator.transports.split(',') as AuthenticatorTransportFuture[] : [authenticator.transports] as AuthenticatorTransportFuture[];

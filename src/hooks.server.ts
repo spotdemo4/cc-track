@@ -127,7 +127,7 @@ if (!building) {
             }
             if (!tables.find((table) => table.name == 'authenticator')) {
                 await db.schema.createTable('authenticator')
-                    .addColumn('credentialID', 'text', col => col.primaryKey())
+                    .addColumn('credentialID', 'bytea', col => col.primaryKey())
                     .addColumn('credentialPublicKey', 'bytea', col => col.notNull())
                     .addColumn('counter', 'bigint', col => col.notNull())
                     .addColumn('credentialDeviceType', 'text', col => col.notNull())

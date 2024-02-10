@@ -35,7 +35,7 @@ export interface Authenticator {
   counter: Int8;
   credentialBackedUp: boolean;
   credentialDeviceType: string;
-  credentialID: string;
+  credentialID: Buffer;
   credentialPublicKey: Buffer;
   transports: string | null;
   user_id: number;

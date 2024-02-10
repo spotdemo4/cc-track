@@ -11,13 +11,13 @@ function formatAuthenticator(authenticator: {
     counter: string;
     credentialBackedUp: boolean;
     credentialDeviceType: string;
-    credentialID: string;
+    credentialID: Buffer;
     credentialPublicKey: Buffer;
     transports: string | null;
     user_id: number;
 }) {
-    const credentialID = Buffer.from(authenticator.credentialID);
-    const credentialPublicKey = Buffer.from(authenticator.credentialPublicKey);
+    const credentialID = authenticator.credentialID;
+    const credentialPublicKey = authenticator.credentialPublicKey;
     const credentialBackedUp = authenticator.credentialBackedUp;
     const counter = Number(authenticator.counter);
     const credentialDeviceType = authenticator.credentialDeviceType;

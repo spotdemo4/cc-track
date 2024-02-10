@@ -36,7 +36,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
         await db.insertInto('authenticator')
             .values({
                 user_id: locals.user.id,
-                credentialID: String(verification.registrationInfo.credentialID),
+                credentialID: Buffer.from(verification.registrationInfo.credentialID),
                 credentialPublicKey: Buffer.from(verification.registrationInfo.credentialPublicKey),
                 counter: verification.registrationInfo.counter,
                 transports: body.response.transports.join(','),
