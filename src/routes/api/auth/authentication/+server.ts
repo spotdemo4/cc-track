@@ -3,6 +3,7 @@ import { db } from '$lib/db';
 import { origin, rpID } from '$lib/auth';
 import jsonwebtoken from 'jsonwebtoken';
 import { JWT_SECRET } from '$env/static/private';
+import { bufferToBase64URLString } from '@simplewebauthn/browser';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import type { RequestHandler } from "./$types";
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
@@ -47,13 +48,18 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
     const body = await request.json();
 
-    const authenticator = await db.selectFrom('authenticator')
+    let authenticator = await db.selectFrom('authenticator')
         .selectAll()
         .where('user_id', '=', user.id)
-        .where('credentialID', '=', body.id)
-        .executeTakeFirst();
+        .execute();
     
-    if (!authenticator) {
+    authenticator = authenticator.filter((auth) => {
+        return bufferToBase64URLString(auth.credentialID) === body.id;
+    });
+
+    console.log(authenticator);
+    
+    if (!authenticator[0]) {
         return json({ success: false, error: 'No authenticators!' })
     }
 
@@ -64,7 +70,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
             expectedChallenge: user.currentChallenge,
             expectedOrigin: origin,
             expectedRPID: rpID,
-            authenticator: formatAuthenticator(authenticator),
+            authenticator: formatAuthenticator(authenticator[0]),
         });
     } catch (error) {
         return json({ success: false })
@@ -84,7 +90,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
         // Increment the counter
         await db.updateTable('authenticator')
-            .set('counter', String(Number(authenticator.counter) + 1))
+            .set('counter', String(Number(authenticator[0].counter) + 1))
             .where('user_id', '=', user.id)
             .where('credentialID', '=', body.id)
             .execute();
