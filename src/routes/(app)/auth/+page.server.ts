@@ -48,7 +48,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         attestationType: 'none',
         excludeCredentials: formatAuthenticators(userAuthenticators),
         authenticatorSelection: {
-            residentKey: 'discouraged',
+            residentKey: 'preferred',
             userVerification: 'required',
             authenticatorAttachment: 'platform',
         },
