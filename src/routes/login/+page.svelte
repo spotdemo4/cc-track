@@ -8,7 +8,6 @@
 	import { platformAuthenticatorIsAvailable, startAuthentication } from '@simplewebauthn/browser';
 	import * as Card from '$lib/components/ui/card';
 	import * as Tabs from '$lib/components/ui/tabs';
-	import * as devalue from 'devalue';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -40,7 +39,7 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: devalue.stringify(authRes)
+			body: JSON.stringify(authRes)
 		});
 
 		// Wait for the results of verification
