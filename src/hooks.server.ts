@@ -29,7 +29,7 @@ export const handle = (async ({ event, resolve }) => {
         }
     }
 
-    if (event.url.pathname != '/login' && !event.locals.user) {
+    if (event.url.pathname != '/login' && event.url.pathname != '/api/auth/authentication' && !event.locals.user) {
         throw redirect(302, '/login');
     }
 
