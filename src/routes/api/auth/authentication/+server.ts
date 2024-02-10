@@ -47,11 +47,15 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
     const body = await request.json();
 
+    console.log(body);
+
     const authenticator = await db.selectFrom('authenticator')
         .selectAll()
         .where('user_id', '=', user.id)
         .where('credentialID', '=', body.id)
         .executeTakeFirst();
+    
+    console.log(authenticator);
 
     if (!authenticator) {
         return json({ success: false, error: 'No authenticators!' })
