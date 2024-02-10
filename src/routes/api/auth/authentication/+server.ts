@@ -3,6 +3,7 @@ import { db } from '$lib/db';
 import { origin, rpID } from '$lib/auth';
 import jsonwebtoken from 'jsonwebtoken';
 import { JWT_SECRET } from '$env/static/private';
+import * as devalue from 'devalue';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
 import type { RequestHandler } from "./$types";
 import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
@@ -47,7 +48,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         return json({ success: false, error: 'No user or challenge exists!' })
     }
 
-    const body = await request.json();
+    const body = devalue.parse(await request.text());
 
     console.log(body);
 
