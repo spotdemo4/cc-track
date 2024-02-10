@@ -226,8 +226,22 @@
 			{:then categories}
 				{#key categories}
 					<CategoryChart
-						amounts={categories.map((category) => category.amount)}
-						categories={categories.map((category) => formatCategory(category.category_primary))}
+						amounts={categories
+							.filter(
+								(category) =>
+									category.category_primary != 'LOAN_PAYMENTS' &&
+									category.category_primary != 'TRANSFER_IN' &&
+									category.category_primary != 'TRANSFER_OUT'
+							)
+							.map((category) => category.amount)}
+						categories={categories
+							.filter(
+								(category) =>
+									category.category_primary != 'LOAN_PAYMENTS' &&
+									category.category_primary != 'TRANSFER_IN' &&
+									category.category_primary != 'TRANSFER_OUT'
+							)
+							.map((category) => formatCategory(category.category_primary))}
 					/>
 				{/key}
 			{/await}
@@ -244,10 +258,24 @@
 			{:then subcategories}
 				{#key subcategories}
 					<CategoryChart
-						amounts={subcategories.map((subcategory) => subcategory.amount)}
-						categories={subcategories.map((subcategory) =>
-							formatCategory(subcategory.category_detailed, subcategory.category_primary)
-						)}
+						amounts={subcategories
+							.filter(
+								(category) =>
+									category.category_primary != 'LOAN_PAYMENTS' &&
+									category.category_primary != 'TRANSFER_IN' &&
+									category.category_primary != 'TRANSFER_OUT'
+							)
+							.map((subcategory) => subcategory.amount)}
+						categories={subcategories
+							.filter(
+								(category) =>
+									category.category_primary != 'LOAN_PAYMENTS' &&
+									category.category_primary != 'TRANSFER_IN' &&
+									category.category_primary != 'TRANSFER_OUT'
+							)
+							.map((subcategory) =>
+								formatCategory(subcategory.category_detailed, subcategory.category_primary)
+							)}
 					/>
 				{/key}
 			{/await}
