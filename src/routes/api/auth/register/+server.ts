@@ -39,7 +39,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
                 credentialID: String(verification.registrationInfo.credentialID),
                 credentialPublicKey: Buffer.from(verification.registrationInfo.credentialPublicKey),
                 counter: verification.registrationInfo.counter,
-                transports: body.transports,
+                transports: body.transports.join(','),
                 credentialDeviceType: verification.registrationInfo.credentialDeviceType,
                 credentialBackedUp: verification.registrationInfo.credentialBackedUp,
             })

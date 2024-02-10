@@ -68,7 +68,7 @@ export const load: PageServerLoad = async ({ locals, cookies }) => {
         options = await generateAuthenticationOptions({
             rpID: rpID,
             allowCredentials: formatAuthenticators(userAuthenticators),
-            userVerification: 'discouraged',
+            userVerification: 'required',
         });
 
         await db.updateTable('users')
