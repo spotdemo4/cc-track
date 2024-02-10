@@ -20,8 +20,6 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 
     const body = await request.json();
 
-    console.log(body);
-
     let verification;
     try {
         verification = await verifyRegistrationResponse({
@@ -41,7 +39,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
                 credentialID: String(verification.registrationInfo.credentialID),
                 credentialPublicKey: Buffer.from(verification.registrationInfo.credentialPublicKey),
                 counter: verification.registrationInfo.counter,
-                transports: body.transports.join(','),
+                transports: body.response.transports.join(','),
                 credentialDeviceType: verification.registrationInfo.credentialDeviceType,
                 credentialBackedUp: verification.registrationInfo.credentialBackedUp,
             })
