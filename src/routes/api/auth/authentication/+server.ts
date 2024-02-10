@@ -53,6 +53,12 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         .where('user_id', '=', user.id)
         .execute();
     
+    console.log(body);
+    for (let auth of authenticator) {
+        console.log(auth.credentialID);
+        console.log(bufferToBase64URLString(auth.credentialID));
+    }
+    
     authenticator = authenticator.filter((auth) => {
         return bufferToBase64URLString(auth.credentialID) === body.id;
     });
