@@ -48,8 +48,8 @@
 		const verificationJSON = await verificationResp.json();
 
 		// Show UI appropriate for the `verified` status
-		if (verificationJSON && verificationJSON.verified) {
-			goto('/');
+		if (verificationJSON && verificationJSON.success) {
+			await goto('/');
 		} else {
 			error = `Oh no, something went wrong! Response: ${JSON.stringify(verificationJSON)}`;
 		}

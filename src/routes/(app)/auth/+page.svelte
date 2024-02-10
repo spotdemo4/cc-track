@@ -32,7 +32,7 @@
 		const verificationJSON = await verificationResp.json();
 
 		// Show UI appropriate for the `verified` status
-		if (verificationJSON && verificationJSON.verified) {
+		if (verificationJSON && verificationJSON.success) {
 			success = 'Success!';
 		} else {
 			error = `Oh no, something went wrong! Response: ${JSON.stringify(verificationJSON)}`;
