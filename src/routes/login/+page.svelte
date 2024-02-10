@@ -40,9 +40,7 @@
 
 		console.log(authRes);
 
-		// POST the response to the endpoint that calls
-		// @simplewebauthn/server -> verifyAuthenticationResponse()
-		const verificationResp = await fetch('/api/auth/authentication', {
+		const verificationResp = await fetch('/api/auth/authtest', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
