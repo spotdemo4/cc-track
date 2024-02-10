@@ -5,6 +5,7 @@
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { platformAuthenticatorIsAvailable } from '@simplewebauthn/browser';
 	import { onMount } from 'svelte';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
@@ -12,6 +13,7 @@
 
 	export let data: LayoutData;
 	let refreshing = false;
+	let supportsAuth = false;
 
 	async function sync() {
 		refreshing = true;
@@ -73,8 +75,9 @@
 		});
 	}
 
-	onMount(() => {
-		detectSWupdate();
+	onMount(async () => {
+		supportsAuth = await platformAuthenticatorIsAvailable();
+		await detectSWupdate();
 	});
 </script>
 
@@ -120,6 +123,11 @@
 					<DropdownMenu.Separator />
 					<DropdownMenu.Item>Profile</DropdownMenu.Item>
 					<DropdownMenu.Item>Settings</DropdownMenu.Item>
+					{#if supportsAuth}
+						<DropdownMenu.Item on:click={() => goto('/auth')} class="cursor-pointer">
+							Auth
+						</DropdownMenu.Item>
+					{/if}
 					<DropdownMenu.Item on:click={logout} class="cursor-pointer">Log out</DropdownMenu.Item>
 				</DropdownMenu.Group>
 			</DropdownMenu.Content>

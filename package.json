@@ -42,6 +42,9 @@
 	"type": "module",
 	"dependencies": {
 		"@internationalized/date": "^3.5.1",
+		"@simplewebauthn/browser": "^9.0.1",
+		"@simplewebauthn/server": "^9.0.2",
+		"@simplewebauthn/types": "^9.0.1",
 		"@sveltejs/adapter-node": "^4.0.1",
 		"apexcharts": "^3.45.2",
 		"bcrypt": "^5.1.1",

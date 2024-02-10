@@ -103,6 +103,7 @@ if (!building) {
             }
 
             // Migration
+            // v0.0.1
             if (!tables.find((table) => table.name == 'accounts')?.columns.find((column) => column.name == 'limit')) {
                 await db.schema.alterTable('accounts')
                     .addColumn('limit', 'numeric(14, 2)')
@@ -118,6 +119,28 @@ if (!building) {
                     .addColumn('funding_account_id', 'text', col => col.references('accounts.id').onDelete('set null'))
                     .execute();
             }
+            // v0.0.2
+            if (!tables.find((table) => table.name == 'users')?.columns.find((column) => column.name == 'currentChallenge')) {
+                await db.schema.alterTable('users')
+                    .addColumn('currentChallenge', 'text')
+                    .execute();
+            }
+            if (!tables.find((table) => table.name == 'authenticator')) {
+                await db.schema.createTable('authenticator')
+                    .addColumn('credentialID', 'text', col => col.primaryKey())
+                    .addColumn('credentialPublicKey', 'bytea', col => col.notNull())
+                    .addColumn('counter', 'bigint', col => col.notNull())
+                    .addColumn('credentialDeviceType', 'text', col => col.notNull())
+                    .addColumn('credentialBackedUp', 'boolean', col => col.notNull())
+                    .addColumn('transports', 'text')
+                    .execute();
+            }
+            if (!tables.find((table) => table.name == 'authenticator')?.columns.find((column) => column.name == 'user_id')) {
+                await db.schema.alterTable('authenticator')
+                    .addColumn('user_id', 'integer', col => col.notNull().references('users.id').onDelete('cascade'))
+                    .execute();
+            }
+
 
             connected = true;
         } catch (e) {
