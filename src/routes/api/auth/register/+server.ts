@@ -3,6 +3,7 @@ import { db } from '$lib/db';
 import { origin, rpID } from '$lib/auth';
 import { verifyRegistrationResponse } from '@simplewebauthn/server';
 import type { RequestHandler } from "./$types";
+import type { RegistrationResponseJSON } from '@simplewebauthn/types';
 
 export const POST: RequestHandler = async ({ locals, request }) => {
     if (!locals.user) {
@@ -18,7 +19,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
         return json({ success: false, error: 'No current challenge!' })
     }
 
-    const body = await request.json();
+    const body = await request.json() as RegistrationResponseJSON;
 
     let verification;
     try {
@@ -39,7 +40,7 @@ export const POST: RequestHandler = async ({ locals, request }) => {
                 credentialID: Buffer.from(verification.registrationInfo.credentialID),
                 credentialPublicKey: Buffer.from(verification.registrationInfo.credentialPublicKey),
                 counter: verification.registrationInfo.counter,
-                transports: body.response.transports.join(','),
+                transports: body.response.transports?.join(','),
                 credentialDeviceType: verification.registrationInfo.credentialDeviceType,
                 credentialBackedUp: verification.registrationInfo.credentialBackedUp,
             })

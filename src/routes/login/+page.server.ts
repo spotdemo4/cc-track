@@ -4,10 +4,10 @@ import { db } from '$lib/db';
 import { fail, redirect } from '@sveltejs/kit';
 import { rpID } from '$lib/auth';
 import { JWT_SECRET } from '$env/static/private';
+import { generateAuthenticationOptions } from '@simplewebauthn/server';
 import bcrypt from 'bcrypt';
 import jsonwebtoken from 'jsonwebtoken';
 import type { PageServerLoad, Actions } from './$types';
-import { generateAuthenticationOptions } from '@simplewebauthn/server';
 import type { AuthenticatorTransportFuture, PublicKeyCredentialDescriptorFuture } from '@simplewebauthn/types';
 
 const schema = z.object({

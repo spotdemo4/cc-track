@@ -1,7 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import { db } from '$lib/db';
 import { rpName, rpID } from '$lib/auth';
-import { base64URLStringToBuffer } from '@simplewebauthn/browser';
 import { generateRegistrationOptions } from '@simplewebauthn/server';
 import type { AuthenticatorTransportFuture, PublicKeyCredentialDescriptorFuture } from '@simplewebauthn/types';
 import type { PageServerLoad } from './$types';

@@ -1,13 +1,14 @@
 import { json } from '@sveltejs/kit';
 import { db } from '$lib/db';
 import { origin, rpID } from '$lib/auth';
-import jsonwebtoken from 'jsonwebtoken';
 import { JWT_SECRET } from '$env/static/private';
 import { bufferToBase64URLString } from '@simplewebauthn/browser';
 import { verifyAuthenticationResponse } from '@simplewebauthn/server';
+import jsonwebtoken from 'jsonwebtoken';
 import type { RequestHandler } from "./$types";
-import type { AuthenticatorTransportFuture } from '@simplewebauthn/types';
+import type { AuthenticationResponseJSON, AuthenticatorTransportFuture } from '@simplewebauthn/types';
 
+// Format the authenticator for the verification
 function formatAuthenticator(authenticator: {
     counter: string;
     credentialBackedUp: boolean;
@@ -30,45 +31,36 @@ function formatAuthenticator(authenticator: {
     }
 }
 
-export const POST: RequestHandler = async ({ request, cookies }) => {    
+export const POST: RequestHandler = async ({ request, cookies }) => {
+    // Get the user's email from the cookies
     const user_email = cookies.get('user_email');
-
     if (!user_email) {
         return json({ success: false, error: 'Username not saved!' })
     }
 
+    // Get the user and their current challenge
     const user = await db.selectFrom('users')
         .select(['currentChallenge', 'id', 'email', 'name'])
         .where('email', '=', user_email)
         .executeTakeFirst();
-
     if (!user || !user.currentChallenge) {
         return json({ success: false, error: 'No user or challenge exists!' })
     }
 
-    const body = await request.json();
-
-    let authenticator = await db.selectFrom('authenticator')
+    // Get the authenticator
+    const body = await request.json() as AuthenticationResponseJSON;
+    const authenticator_db = await db.selectFrom('authenticator')
         .selectAll()
         .where('user_id', '=', user.id)
         .execute();
-    
-    console.log(body);
-    for (let auth of authenticator) {
-        console.log(auth.credentialID);
-        console.log(bufferToBase64URLString(auth.credentialID));
-    }
-    
-    authenticator = authenticator.filter((auth) => {
+    const authenticator = authenticator_db.filter((auth) => {
         return bufferToBase64URLString(auth.credentialID) === body.id;
-    });
-
-    console.log(authenticator);
-    
-    if (!authenticator[0]) {
+    })?.at(0);
+    if (!authenticator) {
         return json({ success: false, error: 'No authenticators!' })
     }
 
+    // Verify the response
     let verification;
     try {
         verification = await verifyAuthenticationResponse({
@@ -76,7 +68,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
             expectedChallenge: user.currentChallenge,
             expectedOrigin: origin,
             expectedRPID: rpID,
-            authenticator: formatAuthenticator(authenticator[0]),
+            authenticator: formatAuthenticator(authenticator),
         });
     } catch (error) {
         return json({ success: false })
@@ -96,9 +88,9 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
         // Increment the counter
         await db.updateTable('authenticator')
-            .set('counter', String(Number(authenticator[0].counter) + 1))
+            .set('counter', String(Number(authenticator.counter) + 1))
             .where('user_id', '=', user.id)
-            .where('credentialID', '=', body.id)
+            .where('credentialID', '=', authenticator.credentialID)
             .execute();
     }
 

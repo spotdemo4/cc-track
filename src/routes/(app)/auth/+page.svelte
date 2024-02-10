@@ -10,6 +10,7 @@
 	async function authReg() {
 		let regRes;
 		try {
+            // Pass the options to the authenticator and wait for a response
 			regRes = await startRegistration(data.options);
 		} catch (err: any) {
 			if (err.name === 'InvalidStateError') {
@@ -21,6 +22,7 @@
 			throw error;
 		}
 
+        // Send the response to the server for verification
 		const verificationResp = await fetch('/api/auth/register', {
 			method: 'POST',
 			headers: {

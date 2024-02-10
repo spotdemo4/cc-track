@@ -29,7 +29,6 @@
 			// Pass the options to the authenticator and wait for a response
 			authRes = await startAuthentication(data.options);
 		} catch (err: any) {
-			// Some basic error handling
 			error = err;
 			throw err;
 		}
