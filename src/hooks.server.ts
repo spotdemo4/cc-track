@@ -113,6 +113,11 @@ if (!building) {
                     .addColumn('limit_timeframe', 'text')
                     .execute();
             }
+            if (!tables.find((table) => table.name == 'accounts')?.columns.find((column) => column.name == 'funding_account_id')) {
+                await db.schema.alterTable('accounts')
+                    .addColumn('funding_account_id', 'text', col => col.references('accounts.id').onDelete('set null'))
+                    .execute();
+            }
 
             connected = true;
         } catch (e) {

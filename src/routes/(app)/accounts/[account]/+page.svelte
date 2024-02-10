@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte';
+	import { formatCategory, capitalize } from '$lib/utils';
 	import { superForm } from 'sveltekit-superforms/client';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import { parseDate } from '@internationalized/date';
 	import * as Select from '$lib/components/ui/select';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import Combobox from '$lib/components/Combobox.svelte';
 	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
-	import { parseDate } from '@internationalized/date';
 	import type { PageData } from './$types';
 
 	export let data: PageData;
@@ -16,13 +17,6 @@
 		dataType: 'json',
 		applyAction: true
 	});
-
-	function formatCategory(category: string) {
-		return category
-			.split('_')
-			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-			.join(' ');
-	}
 
 	function getDateRangeValue(index: number) {
 		if (!$form.cash_back[index].start || !$form.cash_back[index].end) {
@@ -98,30 +92,91 @@
 			<span class="text-red-500 text-sm">{$errors.subtype.join(', ')}</span>
 		{/if}
 	</div>
-	<div class="flex flex-col w-full max-w-sm gap-1.5">
-		<Label for="subtype">Spending limit</Label>
-		<div class="flex gap-2">
-			<Input type="number" step="0.01" id="limit" bind:value={$form.limit} />
+	{#if $form.type != 'depository'}
+		<div class="flex flex-col w-full max-w-sm gap-1.5">
+			<Label for="funding_account">Funding account</Label>
 			<Select.Root
-				onSelectedChange={(test) => {
-					$form.limit_timeframe = String(test?.value);
+				onSelectedChange={(data) => {
+					$form.funding_account = data
+						? {
+								id: data.value,
+								name: data.label ?? ''
+							}
+						: {
+								id: '',
+								name: 'None'
+							};
 				}}
-				selected={$form.limit_timeframe
+				selected={$form.funding_account
 					? {
-							value: $form.limit_timeframe,
-							label: $form.limit_timeframe.at(0)?.toUpperCase() + $form.limit_timeframe.slice(1)
+							value: $form.funding_account.id,
+							label: $form.funding_account.name
 						}
-					: undefined}
+					: {
+							value: '',
+							label: 'None'
+						}}
 			>
 				<Select.Trigger>
-					<Select.Value>{$form.limit_timeframe}</Select.Value>
+					<Select.Value />
 				</Select.Trigger>
 				<Select.Content>
-					<Select.Item value="month">Month</Select.Item>
-					<Select.Item value="quarter">Quarter</Select.Item>
-					<Select.Item value="year">Year</Select.Item>
+					{#await data.stream.accounts}
+						<Select.Item value="loading">Loading...</Select.Item>
+					{:then accounts}
+						<Select.Item value="">None</Select.Item>
+						{#each accounts as account}
+							<Select.Item value={account.id}>{account.name}</Select.Item>
+						{/each}
+					{/await}
 				</Select.Content>
 			</Select.Root>
+			<span class="text-sm text-muted-foreground"> The account that funds this account </span>
+			{#if $errors.funding_account}
+				<span class="text-red-500 text-sm"
+					>{$errors.funding_account.id
+						?.join(', ')
+						.concat($errors.funding_account.name?.join(', ') ?? '')}</span
+				>
+			{/if}
+		</div>
+	{/if}
+	<div class="flex flex-col w-full max-w-sm gap-1.5">
+		<Label for="limit">Spending limit</Label>
+		<div class="flex gap-2">
+			<Input type="number" step="0.01" id="limit" bind:value={$form.limit} />
+			{#key $form.limit_timeframe}
+				<Select.Root
+					onSelectedChange={(data) => {
+						$form.limit_timeframe = data?.value;
+					}}
+					selected={$form.limit_timeframe
+						? {
+								value: $form.limit_timeframe,
+								label: capitalize($form.limit_timeframe)
+							}
+						: undefined}
+				>
+					<Select.Trigger>
+						<Select.Value />
+					</Select.Trigger>
+					<Select.Content>
+						<Select.Item value="month">Month</Select.Item>
+						<Select.Item value="quarter">Quarter</Select.Item>
+						<Select.Item value="year">Year</Select.Item>
+					</Select.Content>
+				</Select.Root>
+			{/key}
+			<Button
+				variant="ghost"
+				size="icon"
+				on:click={() => {
+					$form.limit = null;
+					$form.limit_timeframe = null;
+				}}
+			>
+				<X />
+			</Button>
 		</div>
 		<span class="text-sm text-muted-foreground">
 			Limit spending by setting a maximum amount for this account, as well as a time period

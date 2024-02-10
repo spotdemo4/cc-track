@@ -17,6 +17,10 @@ const schema = z.object({
     institution: z.string().min(1),
     limit: z.coerce.number().nullish(),
     limit_timeframe: z.string().nullish(),
+    funding_account: z.object({
+        id: z.string(),
+        name: z.string().min(1),
+    }).nullish(),
     cash_back: z.object({
         category: z.string().min(1),
         percentage: z.coerce.number().min(0).max(100),
@@ -40,6 +44,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
     const form = await superValidate(schema);
     const account = await getAccount(params.account);
+    const funding_account = account?.funding_account_id ? await getAccount(account?.funding_account_id) : undefined;
 
     if (account) {
         form.data.id = account.id;
@@ -50,7 +55,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
         form.data.subtype = account.subtype ?? '';
         form.data.institution = account.institution;
         form.data.limit = account.limit ? Number(account.limit) : null;
-        form.data.limit_timeframe = account.limit_timeframe ?? '';
+        form.data.limit_timeframe = account.limit_timeframe;
+        form.data.funding_account = funding_account ? {
+            id: funding_account.id,
+            name: funding_account.name,
+        } : undefined;
         form.data.cash_back = (await getCashBacks(account.id)).map((cash_back) => {
             return {
                 category: cash_back.category,
@@ -64,6 +73,14 @@ export const load: PageServerLoad = async ({ locals, params }) => {
     return {
         form,
         categories,
+        stream: {
+            accounts: db.selectFrom('accounts')
+                .select(['id', 'name'])
+                .where('accounts.user_id', '=', locals.user.id)
+                .where('accounts.type', '=', 'depository')
+                .orderBy('name')
+                .execute(),
+        }
     };
 };
 
@@ -110,6 +127,7 @@ export const actions = {
                 institution: form.data.institution,
                 limit: form.data.limit,
                 limit_timeframe: form.data.limit_timeframe,
+                funding_account_id: form.data.funding_account?.id != '' ? form.data.funding_account?.id : null,
             })
             .where('id', '=', form.data.id)
             .execute();

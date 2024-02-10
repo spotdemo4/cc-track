@@ -4,7 +4,7 @@
 	import { Input } from '$lib/components/ui/input';
 	import { fade } from 'svelte/transition';
 	import { getLocalTimeZone, today } from '@internationalized/date';
-	import { formatCurrency, capitalize } from '$lib/utils';
+	import { formatCurrency, formatCategory, capitalize } from '$lib/utils';
 	import * as devalue from 'devalue';
 	import * as Card from '$lib/components/ui/card';
 	import * as Table from '$lib/components/ui/table';
@@ -113,17 +113,6 @@
 			})
 		).text();
 		profit = devalue.parse(res);
-	}
-
-	function formatCategory(category: string | null, replace: string | null = null) {
-		if (!category) return 'N/A';
-		if (replace) {
-			category = category.replace(replace + '_', '');
-		}
-		return category
-			.split('_')
-			.map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-			.join(' ');
 	}
 </script>
 

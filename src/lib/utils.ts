@@ -68,6 +68,17 @@ export function formatCurrency(num: number | string) {
     });
 }
 
+export function formatCategory(category: string | null, replace: string | null = null) {
+    if (!category) return 'N/A';
+    if (replace) {
+        category = category.replace(replace + '_', '');
+    }
+    return category
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+}
+
 export function capitalize(s: string) {
     return s.charAt(0).toUpperCase() + s.slice(1);
 }

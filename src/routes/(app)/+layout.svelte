@@ -5,10 +5,10 @@
 	import { toast } from 'svelte-sonner';
 	import { page } from '$app/stores';
 	import { goto, invalidateAll } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import * as Avatar from '$lib/components/ui/avatar';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import type { LayoutData } from './$types';
-	import { onMount } from 'svelte';
 
 	export let data: LayoutData;
 	let refreshing = false;

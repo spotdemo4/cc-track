@@ -26,6 +26,7 @@ export interface Accounts {
   user_id: number;
   limit: Numeric | null;
   limit_timeframe: string | null;
+  funding_account_id: string | null;
 }
 
 export interface CashBack {
