@@ -70,8 +70,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
             expectedRPID: rpID,
             authenticator: formatAuthenticator(authenticator),
         });
-    } catch (error) {
-        return json({ success: false })
+    } catch (err: any) {
+        return json({ success: false, error: err })
     }
 
     if (verification.verified) {

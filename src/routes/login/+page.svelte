@@ -42,13 +42,16 @@
 		});
 
 		// Wait for the results of verification
-		const verificationJSON = await verificationResp.json();
+		const verificationJSON = await verificationResp.json() as {
+			success: boolean;
+			error?: string;
+		};;
 
 		// Show UI appropriate for the `verified` status
-		if (verificationJSON && verificationJSON.success) {
+		if (verificationJSON.success) {
 			await goto('/');
 		} else {
-			error = `Oh no, something went wrong! Response: ${JSON.stringify(verificationJSON)}`;
+			error = `Oh no, something went wrong! ${verificationJSON?.error}`;
 		}
 	}
 

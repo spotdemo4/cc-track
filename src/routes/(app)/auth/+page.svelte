@@ -10,7 +10,7 @@
 	async function authReg() {
 		let regRes;
 		try {
-            // Pass the options to the authenticator and wait for a response
+			// Pass the options to the authenticator and wait for a response
 			regRes = await startRegistration(data.options);
 		} catch (err: any) {
 			if (err.name === 'InvalidStateError') {
@@ -22,7 +22,7 @@
 			throw error;
 		}
 
-        // Send the response to the server for verification
+		// Send the response to the server for verification
 		const verificationResp = await fetch('/api/auth/register', {
 			method: 'POST',
 			headers: {
@@ -31,13 +31,16 @@
 			body: JSON.stringify(regRes)
 		});
 
-		const verificationJSON = await verificationResp.json();
+		const verificationJSON = (await verificationResp.json()) as {
+			success: boolean;
+			error?: string;
+		};
 
 		// Show UI appropriate for the `verified` status
-		if (verificationJSON && verificationJSON.success) {
+		if (verificationJSON.success) {
 			success = 'Success!';
 		} else {
-			error = `Oh no, something went wrong! Response: ${JSON.stringify(verificationJSON)}`;
+			error = `Oh no, something went wrong! ${verificationJSON?.error}`;
 		}
 	}
 </script>

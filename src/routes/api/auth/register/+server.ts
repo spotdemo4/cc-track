@@ -7,7 +7,7 @@ import type { RegistrationResponseJSON } from '@simplewebauthn/types';
 
 export const POST: RequestHandler = async ({ locals, request }) => {
     if (!locals.user) {
-        return json({ success: false, error: 'Not logged in' })
+        return json({ success: false, error: 'Not logged in.' })
     }
 
     const expectedChallenge = (await db.selectFrom('users')
@@ -29,8 +29,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
             expectedOrigin: origin,
             expectedRPID: rpID,
         });
-    } catch (error) {
-        return json({ success: false })
+    } catch (err: any) {
+        return json({ success: false, error: err })
     }
 
     if (verification.verified && verification.registrationInfo) {
