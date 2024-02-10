@@ -38,8 +38,6 @@ function formatAuthenticators(authenticators: {
         }
     }
 
-    console.log(allowedCredentials);
-
     return allowedCredentials;
 }
 
