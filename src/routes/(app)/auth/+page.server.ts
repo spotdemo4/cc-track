@@ -17,7 +17,7 @@ function formatAuthenticators(authenticators: {
 ) {
     let excludeCredentials: PublicKeyCredentialDescriptorFuture[] = [];
     for (let authenticator of authenticators) {
-        const id = Buffer.from(authenticator.credentialID, 'utf-8');
+        const id = Buffer.from(authenticator.credentialID);
         const type = 'public-key';
         if (authenticator.transports) {
             const transports = authenticator.transports.includes(',') ? authenticator.transports.split(',') as AuthenticatorTransportFuture[] : [authenticator.transports] as AuthenticatorTransportFuture[];

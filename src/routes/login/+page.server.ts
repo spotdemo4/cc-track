@@ -26,19 +26,21 @@ function formatAuthenticators(authenticators: {
     user_id: number;
 }[]
 ) {
-    let excludeCredentials: PublicKeyCredentialDescriptorFuture[] = [];
+    let allowedCredentials: PublicKeyCredentialDescriptorFuture[] = [];
     for (let authenticator of authenticators) {
-        const id = Buffer.from(authenticator.credentialID, 'utf-8');
+        const id = Buffer.from(authenticator.credentialID);
         const type = 'public-key';
         if (authenticator.transports) {
             const transports = authenticator.transports.includes(',') ? authenticator.transports.split(',') as AuthenticatorTransportFuture[] : [authenticator.transports] as AuthenticatorTransportFuture[];
-            excludeCredentials.push({ id, type, transports });
+            allowedCredentials.push({ id, type, transports });
         } else {
-            excludeCredentials.push({ id, type });
+            allowedCredentials.push({ id, type });
         }
     }
 
-    return excludeCredentials;
+    console.log(allowedCredentials);
+
+    return allowedCredentials;
 }
 
 export const load: PageServerLoad = async ({ locals, cookies }) => {
