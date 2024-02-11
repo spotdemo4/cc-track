@@ -60,8 +60,6 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         return json({ success: false, error: 'No authenticators!' })
     }
 
-    console.log(authenticator);
-
     // Verify the response
     let verification;
     try {
@@ -73,11 +71,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
             authenticator: formatAuthenticator(authenticator),
         });
     } catch (err: any) {
-        console.log(err);
         return json({ success: false, error: JSON.stringify(err) })
     }
-
-    console.log(verification);
 
     if (verification.verified) {
         // Set the cookies to login
