@@ -71,7 +71,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
             authenticator: formatAuthenticator(authenticator),
         });
     } catch (err: any) {
-        return json({ success: false, error: err })
+        return json({ success: false, error: JSON.stringify(err) })
     }
 
     if (verification.verified) {

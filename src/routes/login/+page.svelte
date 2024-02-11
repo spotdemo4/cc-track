@@ -47,6 +47,8 @@
 			error?: string;
 		};;
 
+		console.log(verificationJSON);
+
 		// Show UI appropriate for the `verified` status
 		if (verificationJSON.success) {
 			await goto('/');
