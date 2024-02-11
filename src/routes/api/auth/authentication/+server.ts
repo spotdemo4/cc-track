@@ -93,7 +93,7 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
 
         // Increment the counter
         await db.updateTable('authenticator')
-            .set('counter', String(Number(authenticator.counter) + 1))
+            .set('counter', verification.authenticationInfo.newCounter)
             .where('user_id', '=', user.id)
             .where('credentialID', '=', authenticator.credentialID)
             .execute();
