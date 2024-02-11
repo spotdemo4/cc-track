@@ -74,6 +74,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         return json({ success: false, error: JSON.stringify(err) })
     }
 
+    console.log(verification);
+
     if (verification.verified) {
         // Set the cookies to login
         const token = jsonwebtoken.sign(
