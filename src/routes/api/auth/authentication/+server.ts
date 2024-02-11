@@ -60,6 +60,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         return json({ success: false, error: 'No authenticators!' })
     }
 
+    console.log(authenticator);
+
     // Verify the response
     let verification;
     try {
