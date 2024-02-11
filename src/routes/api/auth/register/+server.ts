@@ -30,7 +30,8 @@ export const POST: RequestHandler = async ({ locals, request }) => {
             expectedRPID: rpID,
         });
     } catch (err: any) {
-        return json({ success: false, error: err })
+        console.log(err);
+        return json({ success: false, error: JSON.stringify(err) })
     }
 
     if (verification.verified && verification.registrationInfo) {
