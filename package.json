@@ -57,7 +57,7 @@
 		"lucide-svelte": "^0.307.0",
 		"mode-watcher": "^0.1.2",
 		"pg": "^8.11.3",
-		"plaid": "^18.2.0",
+		"plaid": "^21.0.0",
 		"svelte-sonner": "^0.3.11",
 		"tailwind-merge": "^2.2.0",
 		"tailwind-variants": "^0.1.20"
