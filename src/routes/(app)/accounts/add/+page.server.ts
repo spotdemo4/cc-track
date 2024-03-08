@@ -17,7 +17,7 @@ const schema = z.object({
     public_token: z.string().min(1),
 });
 
-export const load: PageServerLoad = async ({ locals }) => {
+export const load: PageServerLoad = async ({ locals, url }) => {
     if (!locals.user) {
         throw redirect(302, '/login');
     }
@@ -29,6 +29,7 @@ export const load: PageServerLoad = async ({ locals }) => {
         language: 'en',
         products: plaidProducts,
         country_codes: plaidCountryCodes,
+        redirect_uri: url.origin + '/accounts/add',
     });
 
     return {
